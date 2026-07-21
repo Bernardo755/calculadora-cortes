@@ -11,17 +11,22 @@
     
     /* Panel lateral de controles */
     .sidebar { width: 320px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); flex-shrink: 0; }
-    h2 { font-size: 18px; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
-    .group { margin-bottom: 15px; }
+    h2 { font-size: 16px; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+    .group { margin-bottom: 12px; }
     label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569; }
     input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
     input:focus { outline: none; border-color: #2563eb; }
     .row { display: flex; gap: 10px; }
     button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     button:hover { background: #1d4ed8; }
-    button.clear { background: #ef4444; margin-top: 10px; }
+    button.clear { background: #ef4444; margin-top: 8px; }
     button.clear:hover { background: #dc2626; }
     
+    /* Panel de Resumen de Área */
+    .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-top: 15px; }
+    .summary-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #334155; }
+    .summary-item strong { color: #0f172a; }
+
     /* Área del Tablero */
     .main-area { flex-grow: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .instructions { font-size: 13px; color: #64748b; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 4px solid #2563eb; }
@@ -44,22 +49,20 @@
     <div class="group row">
       <div>
         <label>Ancho (mm)</label>
-        <input type="number" id="board-w" value="2440">
+        <input type="number" id="board-w" value="2440" oninput="updateBoard()">
       </div>
       <div>
         <label>Alto (mm)</label>
-        <input type="number" id="board-h" value="1220">
+        <input type="number" id="board-h" value="1220" oninput="updateBoard()">
       </div>
     </div>
     
     <div class="group">
       <label>Grosor del disco / Margen (mm)</label>
-      <input type="number" id="kerf" value="3">
+      <input type="number" id="kerf" value="3" oninput="updateBoard()">
     </div>
 
-    <button onclick="updateBoard()">Actualizar Tablero</button>
-
-    <h2 style="margin-top: 25px;">2. Agregar Piezas</h2>
+    <h2>2. Agregar Piezas</h2>
     <div class="group">
       <label>Etiqueta / Nombre</label>
       <input type="text" id="piece-name" placeholder="Ej: Estante">
@@ -80,12 +83,33 @@
     </div>
     <button onclick="addPieces()">+ Agregar Piezas</button>
     <button class="clear" onclick="clearPieces()">Limpiar Piezas</button>
+
+    <h2>3. Resumen de Consumo</h2>
+    <div class="summary-card">
+      <div class="summary-item">
+        <span>Piezas en tablero:</span>
+        <strong id="stat-count">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Área de piezas:</span>
+        <strong id="stat-area-pieces">0.00 m²</strong>
+      </div>
+      <div class="summary-item">
+        <span>Aprovechamiento:</span>
+        <strong id="stat-usage">0%</strong>
+      </div>
+      <hr style="margin: 8px 0; border: 0; border-top: 1px solid #cbd5e1;">
+      <div class="summary-item" style="flex-direction: column; gap: 4px;">
+        <span>Placa mínima necesaria:</span>
+        <strong id="stat-bounding-box" style="color: #2563eb; font-size: 14px;">0 x 0 mm</strong>
+      </div>
+    </div>
   </div>
 
   <!-- Área Visual -->
   <div class="main-area">
     <div class="instructions">
-      💡 <strong>Controles:</strong> Arrastra las piezas sobre el tablero para acomodarlas. Haz <strong>clic</strong> sobre una pieza para rotarla 90°. El borde discontinuo rojo indica el margen del disco de sierra.
+      💡 <strong>Controles:</strong> Arrastra las piezas sobre el tablero. Haz <strong>clic</strong> sobre una pieza para rotarla 90°. Revisa el panel izquierdo para ver el área ocupada y la medida de placa que requieres.
     </div>
     <div id="board-container">
       <div id="board"></div>
@@ -112,9 +136,12 @@
     board.style.width = (bw * scale) + 'px';
     board.style.height = (bh * scale) + 'px';
 
+    const kerf = parseFloat(document.getElementById('kerf').value) || 0;
     document.querySelectorAll('.piece').forEach(p => {
-      p.style.outline = `${(parseFloat(document.getElementById('kerf').value) || 0) * scale}px dashed rgba(239, 68, 68, 0.6)`;
+      p.style.outline = `${kerf * scale}px dashed rgba(239, 68, 68, 0.6)`;
     });
+
+    calculateStats();
   }
 
   function addPieces() {
@@ -128,7 +155,6 @@
 
     const board = document.getElementById('board');
 
-    // Bucle para crear la cantidad seleccionada de piezas
     for (let i = 0; i < qty; i++) {
       const piece = document.createElement('div');
       piece.className = 'piece';
@@ -137,6 +163,8 @@
 
       piece.dataset.w = pw;
       piece.dataset.h = ph;
+      piece.dataset.x = 10 + ((i * 15) % 150);
+      piece.dataset.y = 10 + ((i * 15) % 150);
       piece.dataset.name = displayName;
 
       piece.style.outline = `${kerf * scale}px dashed rgba(239, 68, 68, 0.6)`;
@@ -144,12 +172,9 @@
 
       updatePieceSize(piece);
 
-      // Escalonar ligeramente las posiciones iniciales para que no queden 100% encimadas
-      const offset = (i * 15) % 150;
-      piece.style.left = (10 + offset) + 'px';
-      piece.style.top = (10 + offset) + 'px';
+      piece.style.left = (parseFloat(piece.dataset.x) * scale) + 'px';
+      piece.style.top = (parseFloat(piece.dataset.y) * scale) + 'px';
 
-      // Eventos de Arrastre y Rotación
       piece.addEventListener('mousedown', startDrag);
       piece.addEventListener('click', (e) => {
         if (piece.dataset.dragged === 'true') return;
@@ -158,10 +183,13 @@
         piece.dataset.w = currentH;
         piece.dataset.h = currentW;
         updatePieceSize(piece);
+        calculateStats();
       });
 
       board.appendChild(piece);
     }
+
+    calculateStats();
   }
 
   function updatePieceSize(piece) {
@@ -200,8 +228,13 @@
     x = Math.max(0, Math.min(x, bw - pw));
     y = Math.max(0, Math.min(y, bh - ph));
 
+    activePiece.dataset.x = x;
+    activePiece.dataset.y = y;
+
     activePiece.style.left = (x * scale) + 'px';
     activePiece.style.top = (y * scale) + 'px';
+
+    calculateStats();
   }
 
   function stopDrag() {
@@ -212,6 +245,37 @@
 
   function clearPieces() {
     document.getElementById('board').innerHTML = '';
+    calculateStats();
+  }
+
+  function calculateStats() {
+    const pieces = document.querySelectorAll('.piece');
+    const bw = parseFloat(document.getElementById('board-w').value) || 0;
+    const bh = parseFloat(document.getElementById('board-h').value) || 0;
+    const totalBoardArea = (bw * bh) / 1000000; // En m2
+
+    let totalPieceArea = 0;
+    let maxX = 0;
+    let maxY = 0;
+
+    pieces.forEach(p => {
+      const w = parseFloat(p.dataset.w);
+      const h = parseFloat(p.dataset.h);
+      const x = parseFloat(p.dataset.x) || 0;
+      const y = parseFloat(p.dataset.y) || 0;
+
+      totalPieceArea += (w * h) / 1000000; // En m2
+
+      if (x + w > maxX) maxX = x + w;
+      if (y + h > maxY) maxY = y + h;
+    });
+
+    const usagePct = totalBoardArea > 0 ? ((totalPieceArea / totalBoardArea) * 100).toFixed(1) : 0;
+
+    document.getElementById('stat-count').innerText = pieces.length;
+    document.getElementById('stat-area-pieces').innerText = totalPieceArea.toFixed(2) + ' m²';
+    document.getElementById('stat-usage').innerText = usagePct + '%';
+    document.getElementById('stat-bounding-box').innerText = `${Math.round(maxX)} x ${Math.round(maxY)} mm`;
   }
 
   window.onload = updateBoard;
