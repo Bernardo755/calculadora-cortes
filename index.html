@@ -3,362 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimizador de Cortes Pro (Aprovechamiento Sobrante)</title>
+    <title>Acomodo de Múltiples Piezas</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); max-width: 950px; width: 100%; }
-        h1, h2, h3 { color: #2c3e50; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 900px; width: 100%; }
+        h1, h2 { color: #2c3e50; text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 25px; }
         
-        .section { margin-bottom: 25px; padding: 20px; border: 1px solid #ecf0f1; border-radius: 8px; background-color: #fff; }
-        .section-header { font-weight: bold; font-size: 1.1em; margin-bottom: 15px; color: #7f8c8d; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 5px; }
+        .section { margin-bottom: 25px; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #fff; }
+        .section-header { font-weight: bold; font-size: 1.1em; margin-bottom: 15px; color: #34495e; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 5px; }
 
-        .input-row { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 15px; flex-wrap: wrap; }
-        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
+        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; background: #f8f9fa; padding: 10px; border-radius: 6px; }
+        .pieza-id-badge { background: #34495e; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; min-width: 70px; text-align: center; }
+        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 100px; }
         
-        label { font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #34495e; }
-        input { padding: 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 16px; transition: border-color 0.2s; }
-        input:focus { border-color: #3498db; outline: none; }
+        label { font-weight: 600; margin-bottom: 4px; font-size: 13px; color: #555; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
         
-        button { border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-size: 16px; transition: background 0.3s, transform 0.1s; font-weight: bold; }
-        button:active { transform: translateY(1px); }
-        .btn-add { background-color: #27ae60; color: white; margin-top: 10px; }
+        button { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s; }
+        .btn-add { background-color: #27ae60; color: white; margin-top: 5px; }
         .btn-add:hover { background-color: #219653; }
-        .btn-delete { background-color: #e74c3c; color: white; padding: 10px; font-size: 14px;}
+        .btn-delete { background-color: #e74c3c; color: white; padding: 8px 12px; font-size: 13px; }
         .btn-delete:hover { background-color: #c0392b; }
-        .btn-calc { background-color: #3498db; color: white; width: 100%; font-size: 18px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
-        .btn-calc:hover { background-color: #2980b9; }
+        .btn-calc { background-color: #2980b9; color: white; width: 100%; font-size: 18px; padding: 15px; margin-top: 10px; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.2); }
+        .btn-calc:hover { background-color: #2471a3; }
 
-        /* Estado General y Mensajes */
-        .status-banner { text-align: center; padding: 25px; border-radius: 8px; margin: 25px 0; font-size: 20px; font-weight: bold; border-width: 2px; border-style: solid; display: none; }
-        .status-ok { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .status-warn { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
-        .grand-summary { margin-top: 10px; font-size: 16px; font-weight: normal; }
-
-        /* Reporte Desglosado */
-        .board-result { display: flex; flex-wrap: wrap; gap: 20px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; align-items: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .board-info { flex: 1; min-width: 280px; }
-        .board-info h3 { text-align: left; margin-top: 0; color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 10px;}
-        .board-info p { margin: 8px 0; font-size: 16px; display: flex; justify-content: space-between;}
-        .board-info .stat-val { font-weight: bold; color: #2c3e50; }
+        /* Reporte y Canvas */
+        .visualization-area { margin-top: 30px; display: none; }
+        .canvas-wrapper { text-align: center; overflow-x: auto; padding: 10px; background: #ecf0f1; border-radius: 8px; margin-bottom: 20px; }
+        canvas { border: 2px solid #2c3e50; background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         
-        .canvas-container { flex: 1; min-width: 320px; text-align: center; }
-        canvas { border: 2px solid #2c3e50; background-color: #f8f9fa; max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .canvas-legend { font-size: 12px; color: #7f8c8d; margin-top: 5px; display: flex; justify-content: center; gap: 10px;}
-        .legend-item { display: flex; align-items: center; gap: 4px; }
-        .color-box { width: 12px; height: 12px; border-radius: 2px; border: 1px solid #2c3e50; }
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .report-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 6px; border-left: 5px solid #ccc; }
+        .report-card h3 { margin: 0 0 10px 0; font-size: 16px; display: flex; justify-content: space-between; }
+        .report-card p { margin: 5px 0; font-size: 14px; }
+        .badge-ok { color: #27ae60; font-weight: bold; }
+        .badge-fail { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Optimizador de Cortes 2D Pro</h1>
-        <p style="text-align:center; color: #7f8c8d; margin-top: -10px;">Aprovechamiento avanzado de sobrantes (Bin Packing Greedy)</p>
+        <h1>Acomodo en Placa Única</h1>
+        <p class="subtitle">Ingresa tu margen principal y todas las piececitas que necesitas cortar</p>
 
-        <!-- SECCIÓN 1: EL OBJETIVO -->
+        <!-- SECCIÓN 1: LA PLACA PRINCIPAL -->
         <div class="section">
-            <div class="section-header">1. Objetivo del Proyecto</div>
-            <div class="input-row">
-                <div class="input-group" style="flex: 2;">
-                    <label>Medidas Pieza (Ancho x Alto):</label>
-                    <div style="display:flex; gap: 10px;">
-                        <input type="number" id="piezaW" value="50" min="1" placeholder="Ej. 50">
-                        <span style="align-self:center; font-weight:bold;">x</span>
-                        <input type="number" id="piezaH" value="30" min="1" placeholder="Ej. 30">
-                    </div>
+            <div class="section-header">1. El Margen Principal (La Placa)</div>
+            <div style="display: flex; gap: 15px;">
+                <div class="input-group">
+                    <label>Ancho Total:</label>
+                    <input type="number" id="placaW" value="244" min="1">
                 </div>
-                <div class="input-group" style="flex: 1;">
-                    <label>Total Piezas REQUERIDAS:</label>
-                    <input type="number" id="requiredQty" value="100" min="1" placeholder="Ej. 100">
+                <div class="input-group">
+                    <label>Alto Total:</label>
+                    <input type="number" id="placaH" value="122" min="1">
                 </div>
             </div>
         </div>
 
-        <!-- SECCIÓN 2: LAS PLACAS -->
+        <!-- SECCIÓN 2: LAS PIEZAS A CORTAR -->
         <div class="section">
-            <div class="section-header">2. Inventario de Placas Disponibles</div>
-            <div id="placas-container">
-                <!-- Fila inicial por defecto -->
-                <div class="input-row placa-item">
+            <div class="section-header">2. Piezas a Cortar dentro de la placa</div>
+            <div id="piezas-container">
+                <!-- Fila de pieza inicial -->
+                <div class="input-row pieza-item">
+                    <div class="pieza-id-badge">Pieza #1</div>
                     <div class="input-group">
-                        <label>Ancho Placa:</label>
-                        <input type="number" class="p-w" value="244" min="1">
+                        <label>Ancho:</label>
+                        <input type="number" class="pz-w" value="50" min="1">
                     </div>
                     <div class="input-group">
-                        <label>Alto Placa:</label>
-                        <input type="number" class="p-h" value="122" min="1">
+                        <label>Alto:</label>
+                        <input type="number" class="pz-h" value="30" min="1">
                     </div>
                     <div class="input-group">
-                        <label>Cantidad Disponible:</label>
-                        <input type="number" class="p-qty" value="2" min="1">
+                        <label>¿Cuántas?:</label>
+                        <input type="number" class="pz-qty" value="5" min="1">
                     </div>
-                    <button class="btn-delete" onclick="eliminarPlaca(this)">🗑️ Eliminar</button>
+                    <button class="btn-delete" onclick="eliminarPieza(this)">Eliminar</button>
                 </div>
             </div>
-            <button class="btn-add" onclick="agregarPlaca()">+ Añadir otra medida de placa</button>
+            <button class="btn-add" onclick="agregarPieza()">+ Añadir otro tamaño de pieza</button>
         </div>
 
-        <button class="btn-calc" onclick="optimizarProyecto()">🚀 Optimizar Cortes del Proyecto</button>
+        <button class="btn-calc" onclick="calcularAcomodo()">Calcular y Dibujar Acomodo</button>
 
-        <!-- RESULTADOS GENERALES -->
-        <div id="status-banner" class="status-banner">
-            <div id="status-message"></div>
-            <div id="grand-summary" class="grand-summary"></div>
+        <!-- RESULTADOS -->
+        <div id="visualization-area" class="visualization-area">
+            <h2 style="text-align: left; margin-bottom: 15px;">Visualización del Corte</h2>
+            <div class="canvas-wrapper">
+                <canvas id="canvas"></canvas>
+            </div>
+            <h2 style="text-align: left; margin-bottom: 15px;">Reporte de Resultados</h2>
+            <div id="reporte" class="report-grid"></div>
         </div>
-
-        <!-- REPORTE VISUAL DESGLOSADO -->
-        <div id="resultados-desglose"></div>
     </div>
 
     <script>
-        // Función para añadir una nueva fila de placas
-        function agregarPlaca() {
-            const container = document.getElementById('placas-container');
+        // Paleta de colores para diferenciar las piezas
+        const colores = ['#e74c3c', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#1abc9c', '#34495e', '#ff7979', '#badc58', '#f8a5c2'];
+        let contadorPiezas = 1;
+
+        function actualizarNumeros() {
+            const filas = document.querySelectorAll('.pieza-item');
+            filas.forEach((fila, index) => {
+                fila.querySelector('.pieza-id-badge').innerText = `Pieza #${index + 1}`;
+                fila.dataset.id = index + 1;
+            });
+            contadorPiezas = filas.length;
+        }
+
+        function agregarPieza() {
+            const container = document.getElementById('piezas-container');
             const row = document.createElement('div');
-            row.className = 'input-row placa-item';
+            row.className = 'input-row pieza-item';
             row.innerHTML = `
+                <div class="pieza-id-badge">Pieza #X</div>
                 <div class="input-group">
-                    <label>Ancho Placa:</label>
-                    <input type="number" class="p-w" placeholder="Ej. 120" min="1">
+                    <label>Ancho:</label>
+                    <input type="number" class="pz-w" placeholder="Ej. 20" min="1">
                 </div>
                 <div class="input-group">
-                    <label>Alto Placa:</label>
-                    <input type="number" class="p-h" placeholder="Ej. 120" min="1">
+                    <label>Alto:</label>
+                    <input type="number" class="pz-h" placeholder="Ej. 20" min="1">
                 </div>
                 <div class="input-group">
-                    <label>Cantidad Disponible:</label>
-                    <input type="number" class="p-qty" value="1" min="1">
+                    <label>¿Cuántas?:</label>
+                    <input type="number" class="pz-qty" value="1" min="1">
                 </div>
-                <button class="btn-delete" onclick="eliminarPlaca(this)">🗑️ Eliminar</button>
+                <button class="btn-delete" onclick="eliminarPieza(this)">Eliminar</button>
             `;
             container.appendChild(row);
+            actualizarNumeros();
         }
 
-        function eliminarPlaca(btn) {
-            const row = btn.parentElement;
-            if (document.querySelectorAll('.placa-item').length > 1) { row.remove(); } 
-            else { alert("Debes tener al menos una placa en inventario."); }
-        }
-
-        // --- CORE ALGORÍTMICO ---
-
-        // Función Greedy Recursiva (Guillotine cut variant) para llenar rectángulos pequeños
-        // Tries both orientations of target (pW x pH)
-        function recursiveGuillotinePack(binW, binH, pW, pH, xOff, yOff) {
-            if ((pW > binW || pH > binH) && (pH > binW || pW > binH)) return []; // Base case: doesn't fit
-
-            // Try placing Normal (pW x pH)
-            let placementsNormal = [];
-            if (pW <= binW && pH <= binH) {
-                placementsNormal.push({ x: xOff, y: yOff, w: pW, h: pH, type: 'packed' });
-                // Greedy split: Right rectangle first, then Bottom rectangle
-                let subR = recursiveGuillotinePack(binW - pW, pH, pW, pH, xOff + pW, yOff);
-                let subB = recursiveGuillotinePack(binW, binH - pH, pW, pH, xOff, yOff + pH);
-                placementsNormal = placementsNormal.concat(subR, subB);
-            }
-
-            // Try placing Rotated (pH x pW)
-            let placementsRotated = [];
-            if (pH <= binW && pW <= binH) {
-                placementsRotated.push({ x: xOff, y: yOff, w: pH, h: pW, type: 'packed' });
-                let subR = recursiveGuillotinePack(binW - pH, pW, pW, pH, xOff + pH, yOff);
-                let subB = recursiveGuillotinePack(binW, binH - pW, pW, pH, xOff, yOff + pW);
-                placementsRotated = placementsRotated.concat(subR, subB);
-            }
-
-            // Return the orientation that packs more pieces
-            return placementsNormal.length >= placementsRotated.length ? placementsNormal : placementsRotated;
-        }
-
-        // Función para llenar UNA placa combinando cuadrícula principal uniforme + empaquetado de guillotina en sobrantes
-        function optimizeSingleBoard(bW, bH, pW, pH) {
-            // 1. Calcular mejor cuadrícula uniforme (sin rotaciones aleatorias)
-            const cols1 = Math.floor(bW / pW);
-            const rows1 = Math.floor(bH / pH);
-            const count1 = cols1 * rows1;
-
-            const cols2 = Math.floor(bW / pH);
-            const rows2 = Math.floor(bH / pW);
-            const count2 = cols2 * rows2;
-
-            let bestGrid = [];
-            let mainW, mainH, gridCols, gridRows;
-
-            // Pick best basic grid
-            if (count1 >= count2) {
-                mainW = pW; mainH = pH; gridCols = cols1; gridRows = rows1;
+        function eliminarPieza(btn) {
+            if (document.querySelectorAll('.pieza-item').length > 1) {
+                btn.parentElement.remove();
+                actualizarNumeros();
             } else {
-                mainW = pH; mainH = pW; gridCols = cols2; gridRows = rows2;
+                alert("Debes tener al menos un tipo de pieza para cortar.");
             }
-
-            // Generar coordenadas de la cuadrícula principal
-            for (let r = 0; r < gridRows; r++) {
-                for (let c = 0; c < gridCols; c++) {
-                    bestGrid.push({ x: c * mainW, y: r * mainH, w: mainW, h: mainH, type: 'grid' });
-                }
-            }
-
-            // 2. APROVECHAMIENTO DE SOBRANTES (The 'Sobrante' space)
-            // Calculamos los dos rectángulos de desperdicio principales
-            let packedPieces = [];
-            
-            // Rectángulo de desperdicio INFERIOR (Bottom)
-            const wasteBottomW = bW; // Ocupa todo el ancho
-            const wasteBottomH = bH - (gridRows * mainH);
-            if (wasteBottomH > 0) {
-                const bottomPack = recursiveGuillotinePack(wasteBottomW, wasteBottomH, pW, pH, 0, gridRows * mainH);
-                packedPieces = packedPieces.concat(bottomPack);
-            }
-
-            // Rectángulo de desperdicio DERECHO (Right - excluding the bottom waste area already handled)
-            const wasteRightW = bW - (gridCols * mainW);
-            const wasteRightH = gridRows * mainH; // Solo la altura de la cuadrícula principal
-            if (wasteRightW > 0) {
-                const rightPack = recursiveGuillotinePack(wasteRightW, wasteRightH, pW, pH, gridCols * mainW, 0);
-                packedPieces = packedPieces.concat(rightPack);
-            }
-
-            const totalPlacements = bestGrid.concat(packedPieces);
-            const gridCount = bestGrid.length;
-            const packedCount = packedPieces.length;
-
-            return {
-                placements: totalPlacements,
-                totalCount: totalPlacements.length,
-                gridCount: gridCount,
-                packedCount: packedCount
-            };
         }
 
-        // --- GESTIÓN DEL PROYECTO ---
+        // --- ALGORITMO BIN PACKING (Guillotina Simple) ---
+        class GuillotinePacker {
+            constructor(width, height) {
+                this.freeRects = [{x: 0, y: 0, w: width, h: height}];
+            }
 
-        function optimizarProyecto() {
-            // Get inputs
-            const pW = parseFloat(document.getElementById('piezaW').value);
-            const pH = parseFloat(document.getElementById('piezaH').value);
-            const requiredQty = parseInt(document.getElementById('requiredQty').value);
+            insert(width, height) {
+                let bestScore = Infinity;
+                let bestRectIndex = -1;
+                let bestNode = null;
 
-            if (!pW || !pH || !requiredQty || pW<=0 || pH<=0 || requiredQty<=0) return alert("Ingresa medidas y cantidades válidas.");
+                for (let i = 0; i < this.freeRects.length; i++) {
+                    let fr = this.freeRects[i];
+                    // Intento Normal
+                    if (width <= fr.w && height <= fr.h) {
+                        let score = Math.min(fr.w - width, fr.h - height);
+                        if (score < bestScore) { bestNode = {x: fr.x, y: fr.y, w: width, h: height}; bestScore = score; bestRectIndex = i; }
+                    }
+                    // Intento Rotado (90 grados)
+                    if (height <= fr.w && width <= fr.h) {
+                        let score = Math.min(fr.w - height, fr.h - width);
+                        if (score < bestScore) { bestNode = {x: fr.x, y: fr.y, w: height, h: width}; bestScore = score; bestRectIndex = i; }
+                    }
+                }
 
-            const placasDOM = document.querySelectorAll('.placa-item');
-            let inventarioPlacas = [];
-            placasDOM.forEach((fila, index) => {
-                const bW = parseFloat(fila.querySelector('.p-w').value);
-                const bH = parseFloat(fila.querySelector('.p-h').value);
-                const qty = parseInt(fila.querySelector('.p-qty').value);
-                if (bW && bH && qty) inventarioPlacas.push({ w: bW, h: bH, qty: qty, index: index });
+                if (bestNode) {
+                    let fr = this.freeRects[bestRectIndex];
+                    this.freeRects.splice(bestRectIndex, 1); // Quitar el espacio libre usado
+                    this.split(fr, bestNode); // Partir el espacio sobrante
+                    return bestNode;
+                }
+                return null; // No cabe
+            }
+
+            split(freeRect, usedRect) {
+                // Dividir el espacio restante maximizando el área más grande
+                let rightRect = {x: freeRect.x + usedRect.w, y: freeRect.y, w: freeRect.w - usedRect.w, h: usedRect.h};
+                let bottomRect = {x: freeRect.x, y: freeRect.y + usedRect.h, w: freeRect.w, h: freeRect.h - usedRect.h};
+                
+                if (freeRect.w - usedRect.w > freeRect.h - usedRect.h) { 
+                    rightRect.h = freeRect.h; bottomRect.w = usedRect.w; // Corte vertical
+                } else { 
+                    bottomRect.w = freeRect.w; rightRect.h = usedRect.h; // Corte horizontal
+                }
+
+                if (rightRect.w > 0 && rightRect.h > 0) this.freeRects.push(rightRect);
+                if (bottomRect.w > 0 && bottomRect.h > 0) this.freeRects.push(bottomRect);
+            }
+        }
+
+        // --- LÓGICA PRINCIPAL ---
+        function calcularAcomodo() {
+            const placaW = parseFloat(document.getElementById('placaW').value);
+            const placaH = parseFloat(document.getElementById('placaH').value);
+            if (!placaW || !placaH) return alert("Define el tamaño de la placa principal.");
+
+            const filasDOM = document.querySelectorAll('.pieza-item');
+            let itemsParaEmpacar = [];
+            let reporteDatos = [];
+
+            // 1. Leer todas las piezas solicitadas
+            filasDOM.forEach((fila, index) => {
+                const id = index + 1;
+                const w = parseFloat(fila.querySelector('.pz-w').value);
+                const h = parseFloat(fila.querySelector('.pz-h').value);
+                const qty = parseInt(fila.querySelector('.pz-qty').value);
+                const color = colores[index % colores.length];
+
+                if (!w || !h || !qty) return;
+
+                // Guardar para el reporte
+                reporteDatos.push({ id, w, h, pedidas: qty, caben: 0, color });
+
+                // Crear items individuales para el algoritmo
+                for (let i = 0; i < qty; i++) {
+                    itemsParaEmpacar.push({ id, w, h, area: w * h, color, reportIndex: reporteDatos.length - 1 });
+                }
             });
 
-            if (inventarioPlacas.length === 0) return alert("Añade al menos una placa con medidas.");
+            if (itemsParaEmpacar.length === 0) return alert("Agrega medidas a las piezas.");
 
-            let totalCortadas = 0;
-            const desgloseContainer = document.getElementById('resultados-desglose');
-            desgloseContainer.innerHTML = ''; // Limpiar
+            // 2. Ordenar por Área (de mayor a menor) para que el algoritmo funcione mejor
+            itemsParaEmpacar.sort((a, b) => b.area - a.area);
 
-            // Iterar inventario vs Requerimiento
-            for (const placa of inventarioPlacas) {
-                for (let i = 0; i < placa.qty; i++) {
-                    if (totalCortadas >= requiredQty) break; // Objetivo cumplido
+            // 3. Empacar
+            const packer = new GuillotinePacker(placaW, placaH);
+            let piezasColocadas = [];
 
-                    // 1. Optimizar empaquetado avanzdo para UNA placa
-                    const result = optimizeSingleBoard(placa.w, placa.qty > 100 ? placa.h : placa.h, pW, pH);
-
-                    if (result.totalCount === 0) {
-                        desgloseContainer.innerHTML += `<div class="board-result" style="background:#fff3cd; color:#856404; border-color:#ffeeba;"><p>⚠️ La pieza (${pW}x${pH}) no cabe en la placa #${placa.index+1} (${placa.w}x${placa.h}). Saltando...</p></div>`;
-                        break; // No cabe de ninguna forma en este tipo de placa, saltar al siguiente tipo
-                    }
-
-                    // 2. Determinar cuántas necesitamos realmente de esta placa (no pasarnos del objetivo)
-                    const neededCount = requiredQty - totalCortadas;
-                    const piecesToTakeCount = Math.min(result.totalCount, neededCount);
-                    
-                    // Tomar solo las piezas necesarias (priorizando las de cuadrícula)
-                    const placementsTaken = result.placements.slice(0, piecesToTakeCount);
-                    const piecesTakenFromPacked = Math.max(0, piecesToTakeCount - result.gridCount);
-                    const piecesTakenFromGrid = piecesToTakeCount - piecesTakenFromPacked;
-
-                    totalCortadas += piecesToTakeCount;
-
-                    // 3. Renderizar Reporte Visual
-                    const areaPlaca = placa.w * placa.h;
-                    const areaUsada = piecesToTakeCount * (pW * pH);
-                    const desperdicio = (((areaPlaca - areaUsada) / areaPlaca) * 100).toFixed(1);
-
-                    const canvasId = `canvas-${placa.index}-${i}`;
-                    desgloseContainer.innerHTML += `
-                        <div class="board-result">
-                            <div class="board-info">
-                                <h3>Placa #${placa.index + 1} (${i+1}/${placa.qty}): ${placa.w} x ${placa.h}</h3>
-                                <p>Piezas Obtenidas aquí: <span class="stat-val" style="color:#27ae60; font-size:1.1em;">${piecesToTakeCount}</span></p>
-                                <p style="font-size: 0.9em; color:#7f8c8d;">- De cuadrícula principal: <span>${piecesTakenFromGrid}</span></p>
-                                <p style="font-size: 0.9em; color:#7f8c8d;">- De sobrantes rotados: <span>${piecesTakenFromPacked}</span></p>
-                                <p>Aprovechamiento Real: <span class="stat-val">${(100 - desperdicio)}%</span></p>
-                                <p>Desperdicio Real: <span class="stat-val">${desperdicio}%</span></p>
-                            </div>
-                            <div class="canvas-container">
-                                <canvas id="${canvasId}"></canvas>
-                                <div class="canvas-legend">
-                                    <div class="legend-item"><div class="color-box" style="background:#3498db;"></div> Cuadrícula</div>
-                                    <div class="legend-item"><div class="color-box" style="background:#a55eea;"></div> Sobrante Rotado</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    // Dibujar (después de añadir al DOM)
-                    setTimeout(() => dibujarEmpaquetado(canvasId, placa.w, placa.h, placementsTaken), 0);
+            itemsParaEmpacar.forEach(item => {
+                const node = packer.insert(item.w, item.h);
+                if (node) {
+                    piezasColocadas.push({ ...item, x: node.x, y: node.y, drawW: node.w, drawH: node.h });
+                    reporteDatos[item.reportIndex].caben += 1;
                 }
-                if (totalCortadas >= requiredQty) break; 
-            }
+            });
 
-            // --- ESTADO FINAL ---
-            const missing = requiredQty - totalCortadas;
-            const banner = document.getElementById('status-banner');
-            const msgDom = document.getElementById('status-message');
-            const summaryDom = document.getElementById('grand-summary');
-            
-            banner.style.display = 'block';
-            summaryDom.innerHTML = `Objetivo: <b>${requiredQty}</b> | Cortadas: <b>${totalCortadas}</b> | Faltan: <b style="color:${missing>0?'#e74c3c':'#27ae60'};">${missing}</b>`;
+            // 4. Dibujar en el Canvas
+            dibujarPlaca(placaW, placaH, piezasColocadas);
 
-            if (missing > 0) {
-                banner.className = 'status-banner status-warn';
-                msgDom.innerHTML = `⚠️ SE NECESITAN MÁS PLACAS`;
-                msgDom.innerHTML += `<p style="font-size: 16px; font-weight:normal; margin-top:5px;">El inventario disponible no es suficiente para completar el pedido.</p>`;
-            } else {
-                banner.className = 'status-banner status-ok';
-                msgDom.innerHTML = `✅ ¡TODO CABE!`;
-                msgDom.innerHTML += `<p style="font-size: 16px; font-weight:normal; margin-top:5px;">Tienes suficiente material en inventario para las ${requiredQty} piezas.</p>`;
-            }
+            // 5. Mostrar Reporte de lo que cupo y lo que faltó
+            generarReporte(reporteDatos);
         }
 
-        // Función para dibujar el layout complejo de una placa
-        function dibujarEmpaquetado(canvasId, boardW, boardH, placements) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
+        function dibujarPlaca(boardW, boardH, colocadas) {
+            document.getElementById('visualization-area').style.display = 'block';
+            const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
             
-            const maxPx = 400; // Máximo ancho visual
-            const scale = Math.min(maxPx / boardW, 300 / boardH); // Limitar también altura visual
+            const maxPx = 700; // Máximo ancho visual en pantalla
+            const scale = Math.min(maxPx / boardW, 500 / boardH);
             
             canvas.width = boardW * scale;
             canvas.height = boardH * scale;
 
-            ctx.fillStyle = '#f8f9fa'; ctx.fillRect(0, 0, canvas.width, canvas.height); // Fondo
+            // Fondo (La placa principal)
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 1;
-
-            placements.forEach(p => {
-                // Color diferente según si es cuadrícula principal o empaquetado de sobrante
-                ctx.fillStyle = (p.type === 'grid') ? '#3498db' : '#a55eea'; // Azul vs Púrpura
-
+            // Dibujar cada pieza acomodada
+            colocadas.forEach(p => {
                 const x = p.x * scale;
                 const y = p.y * scale;
-                const width = p.w * scale;
-                const height = p.h * scale;
+                const w = p.drawW * scale;
+                const h = p.drawH * scale;
 
-                ctx.fillRect(x, y, width, height);
-                ctx.strokeRect(x, y, width, height);
+                // Rectángulo
+                ctx.fillStyle = p.color;
+                ctx.fillRect(x, y, w, h);
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x, y, w, h);
+
+                // Número (ID de la pieza) en el centro
+                ctx.fillStyle = 'white';
+                // Hacer la letra más pequeña si la pieza es muy delgada
+                const fontSize = Math.min(18, Math.min(w, h) * 0.6); 
+                ctx.font = `bold ${fontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Efecto de sombra para que el número se lea sobre cualquier color
+                ctx.shadowColor = "rgba(0,0,0,0.8)";
+                ctx.shadowBlur = 4;
+                ctx.fillText(`#${p.id}`, x + w/2, y + h/2);
+                ctx.shadowBlur = 0; // reset
             });
         }
+
+        function generarReporte(datos) {
+            const reportDiv = document.getElementById('reporte');
+            reportDiv.innerHTML = '';
+
+            datos.forEach(d => {
+                const faltan = d.pedidas - d.caben;
+                const statusHtml = faltan === 0 
+                    ? `<span class="badge-ok">¡Cupieron todas!</span>` 
+                    : `<span class="badge-fail">Faltó espacio</span>`;
+
+                reportDiv.innerHTML += `
+                    <div class="report-card" style="border-left-color: ${d.color}">
+                        <h3>Pieza #${d.id} (${d.w} x ${d.h}) ${statusHtml}</h3>
+                        <p><strong>Pedidas:</strong> ${d.pedidas}</p>
+                        <p><strong>Caben en placa:</strong> <span style="color:#27ae60; font-size:16px; font-weight:bold;">${d.caben}</span></p>
+                        <p><strong>Se quedaron fuera:</strong> <span style="color:#e74c3c;">${faltan}</span></p>
+                    </div>
+                `;
+            });
+        }
+
+        // Inicializar números visuales al cargar
+        actualizarNumeros();
     </script>
 </body>
 </html>
