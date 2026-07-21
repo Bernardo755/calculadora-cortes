@@ -3,127 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Cortes</title>
+    <title>Calculadora de Cortes Pro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 800px; width: 100%; display: flex; flex-wrap: wrap; gap: 20px; }
-        .controls { flex: 1; min-width: 250px; }
-        .visualization { flex: 2; min-width: 300px; display: flex; flex-direction: column; align-items: center; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #2c3e50; color: white; border: none; padding: 10px 15px; width: 100%; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 900px; width: 100%; }
+        h1, h2 { color: #2c3e50; text-align: center; }
+        
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #ecf0f1; }
+        .input-row { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 15px; flex-wrap: wrap; }
+        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 120px; }
+        
+        label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input { padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 16px; }
+        
+        button { background-color: #2c3e50; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
         button:hover { background-color: #1a252f; }
-        canvas { border: 2px solid #2c3e50; max-width: 100%; height: auto; background-color: #ecf0f1; margin-top: 15px; }
-        .results { margin-top: 15px; padding: 10px; background-color: #e8f8f5; border-left: 4px solid #1abc9c; border-radius: 4px; }
+        .btn-add { background-color: #27ae60; margin-top: 10px; }
+        .btn-add:hover { background-color: #219653; }
+        .btn-delete { background-color: #e74c3c; padding: 10px; }
+        .btn-delete:hover { background-color: #c0392b; }
+        .btn-calc { background-color: #3498db; width: 100%; font-size: 18px; padding: 15px; margin-top: 10px; font-weight: bold; }
+        .btn-calc:hover { background-color: #2980b9; }
+
+        /* Resultados */
+        .grand-total { text-align: center; background-color: #d4edda; color: #155724; padding: 20px; border-radius: 8px; margin: 20px 0; font-size: 24px; font-weight: bold; display: none; }
+        
+        .board-result { display: flex; flex-wrap: wrap; gap: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; align-items: center; }
+        .board-info { flex: 1; min-width: 250px; }
+        .board-info p { margin: 5px 0; font-size: 16px; }
+        .canvas-container { flex: 1; min-width: 300px; text-align: center; }
+        canvas { border: 2px solid #2c3e50; background-color: #fff; max-width: 100%; height: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-    <h1>Calculadora de Cortes</h1>
-
     <div class="container">
-        <div class="controls">
-            <h3>Medidas de la Placa Principal</h3>
-            <div class="input-group">
-                <label>Ancho:</label>
-                <input type="number" id="placaW" value="244">
-            </div>
-            <div class="input-group">
-                <label>Alto:</label>
-                <input type="number" id="placaH" value="122">
-            </div>
+        <h1>Calculadora de Cortes Pro</h1>
 
-            <h3>Medidas de la Pieza</h3>
-            <div class="input-group">
-                <label>Ancho:</label>
-                <input type="number" id="piezaW" value="50">
+        <!-- SECCIÓN 1: LA PIEZA -->
+        <div class="section">
+            <h2>1. Medidas de la Pieza a cortar</h2>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Ancho (ej. 50):</label>
+                    <input type="number" id="piezaW" value="50" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Alto (ej. 30):</label>
+                    <input type="number" id="piezaH" value="30" min="1">
+                </div>
             </div>
-            <div class="input-group">
-                <label>Alto:</label>
-                <input type="number" id="piezaH" value="30">
-            </div>
-
-            <button onclick="calcular()">Calcular y Dibujar</button>
-
-            <div id="resultado" class="results" style="display: none;"></div>
         </div>
 
-        <div class="visualization">
-            <canvas id="canvas" width="400" height="300"></canvas>
+        <!-- SECCIÓN 2: LAS PLACAS -->
+        <div class="section">
+            <h2>2. Placas Disponibles en inventario</h2>
+            <div id="placas-container">
+                <!-- Fila inicial por defecto -->
+                <div class="input-row placa-item">
+                    <div class="input-group">
+                        <label>Ancho Placa:</label>
+                        <input type="number" class="p-w" value="244" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Alto Placa:</label>
+                        <input type="number" class="p-h" value="122" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Cantidad:</label>
+                        <input type="number" class="p-qty" value="1" min="1">
+                    </div>
+                    <button class="btn-delete" onclick="eliminarPlaca(this)">🗑️ Eliminar</button>
+                </div>
+            </div>
+            <button class="btn-add" onclick="agregarPlaca()">+ Añadir otra medida de placa</button>
         </div>
+
+        <button class="btn-calc" onclick="calcularTotal()">Calcular Proyecto Completo</button>
+
+        <!-- RESULTADOS -->
+        <div id="grand-total" class="grand-total"></div>
+        <div id="resultados-desglose"></div>
     </div>
 
     <script>
-        function calcular() {
-            // 1. Obtener valores
-            const W = parseFloat(document.getElementById('placaW').value);
-            const H = parseFloat(document.getElementById('placaH').value);
-            const w = parseFloat(document.getElementById('piezaW').value);
-            const h = parseFloat(document.getElementById('piezaH').value);
-
-            if (!W || !H || !w || !h || W <= 0 || H <= 0 || w <= 0 || h <= 0) {
-                alert("Por favor ingresa medidas válidas mayores a 0.");
-                return;
-            }
-
-            if ((w > W || h > H) && (w > H || h > W)) {
-                alert("La pieza es más grande que la placa.");
-                return;
-            }
-
-            // 2. Calcular Opción 1: Orientación Original
-            const cols1 = Math.floor(W / w);
-            const rows1 = Math.floor(H / h);
-            const total1 = cols1 * rows1;
-
-            // 3. Calcular Opción 2: Orientación Rotada (90 grados)
-            const cols2 = Math.floor(W / h);
-            const rows2 = Math.floor(H / w);
-            const total2 = cols2 * rows2;
-
-            let bestTotal, bestCols, bestRows, drawW, drawH;
-
-            // 4. Elegir la orientación que rinda más piezas
-            if (total1 >= total2) {
-                bestTotal = total1;
-                bestCols = cols1;
-                bestRows = rows1;
-                drawW = w;
-                drawH = h;
-            } else {
-                bestTotal = total2;
-                bestCols = cols2;
-                bestRows = rows2;
-                drawW = h; 
-                drawH = w; 
-            }
-
-            // 5. Mostrar Resultados de texto
-            const areaPlaca = W * H;
-            const areaPiezas = bestTotal * (w * h);
-            const aprovechamiento = ((areaPiezas / areaPlaca) * 100).toFixed(1);
-
-            const resDiv = document.getElementById('resultado');
-            resDiv.style.display = 'block';
-            resDiv.innerHTML = `
-                <strong>Total de piezas:</strong> ${bestTotal}<br>
-                <strong>Aprovechamiento:</strong> ${aprovechamiento}%<br>
+        // Función para añadir una nueva fila de placas
+        function agregarPlaca() {
+            const container = document.getElementById('placas-container');
+            const row = document.createElement('div');
+            row.className = 'input-row placa-item';
+            row.innerHTML = `
+                <div class="input-group">
+                    <label>Ancho Placa:</label>
+                    <input type="number" class="p-w" value="" placeholder="Ej. 120" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Alto Placa:</label>
+                    <input type="number" class="p-h" value="" placeholder="Ej. 120" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Cantidad:</label>
+                    <input type="number" class="p-qty" value="1" min="1">
+                </div>
+                <button class="btn-delete" onclick="eliminarPlaca(this)">🗑️ Eliminar</button>
             `;
-
-            // 6. Dibujar en el Canvas
-            dibujar(W, H, drawW, drawH, bestCols, bestRows);
+            container.appendChild(row);
         }
 
-        function dibujar(boardW, boardH, pieceW, pieceH, cols, rows) {
-            const canvas = document.getElementById('canvas');
+        // Función para eliminar una fila
+        function eliminarPlaca(btn) {
+            const row = btn.parentElement;
+            // Evitar eliminar si es la única fila que queda
+            if (document.querySelectorAll('.placa-item').length > 1) {
+                row.remove();
+            } else {
+                alert("Debes tener al menos una placa.");
+            }
+        }
+
+        // Función principal de cálculo
+        function calcularTotal() {
+            // Obtener pieza
+            const pW = parseFloat(document.getElementById('piezaW').value);
+            const pH = parseFloat(document.getElementById('piezaH').value);
+
+            if (!pW || !pH) return alert("Ingresa medidas válidas para la pieza.");
+
+            // Obtener todas las placas
+            const placasDOM = document.querySelectorAll('.placa-item');
+            let granTotalPiezas = 0;
+            const desgloseContainer = document.getElementById('resultados-desglose');
+            desgloseContainer.innerHTML = ''; // Limpiar resultados anteriores
+
+            // Iterar sobre cada tipo de placa ingresada
+            placasDOM.forEach((fila, index) => {
+                const bW = parseFloat(fila.querySelector('.p-w').value);
+                const bH = parseFloat(fila.querySelector('.p-h').value);
+                const qty = parseInt(fila.querySelector('.p-qty').value);
+
+                if (!bW || !bH || !qty) return; // Saltar si hay campos vacíos
+                
+                if ((pW > bW || pH > bH) && (pW > bH || pH > bW)) {
+                    // La pieza no cabe de ninguna forma en esta placa
+                    desgloseContainer.innerHTML += `
+                        <div class="board-result" style="background:#f8d7da; border-color:#f5c6cb; color:#721c24;">
+                            <p>⚠️ La pieza (${pW}x${pH}) es demasiado grande para la placa de ${bW}x${bH}.</p>
+                        </div>
+                    `;
+                    return; // Continuar con la siguiente placa
+                }
+
+                // Calcular Opción 1: Sin rotar
+                const cols1 = Math.floor(bW / pW);
+                const rows1 = Math.floor(bH / pH);
+                const count1 = cols1 * rows1;
+
+                // Calcular Opción 2: Rotando 90 grados
+                const cols2 = Math.floor(bW / pH);
+                const rows2 = Math.floor(bH / pW);
+                const count2 = cols2 * rows2;
+
+                // Elegir la mejor
+                let bestCount, drawW, drawH, cols, rows;
+                if (count1 >= count2) {
+                    bestCount = count1; cols = cols1; rows = rows1; drawW = pW; drawH = pH;
+                } else {
+                    bestCount = count2; cols = cols2; rows = rows2; drawW = pH; drawH = pW;
+                }
+
+                const totalEstaPlaca = bestCount * qty;
+                granTotalPiezas += totalEstaPlaca;
+
+                // Calcular desperdicio
+                const areaPlaca = bW * bH;
+                const areaUsada = bestCount * (pW * pH);
+                const desperdicio = (((areaPlaca - areaUsada) / areaPlaca) * 100).toFixed(1);
+
+                // Crear HTML para el reporte de esta placa específica
+                const canvasId = `canvas-${index}`;
+                const resultHTML = `
+                    <div class="board-result">
+                        <div class="board-info">
+                            <h3 style="margin-top:0; color:#2980b9;">Placa: ${bW} x ${bH}</h3>
+                            <p><strong>Cantidad en inventario:</strong> ${qty}</p>
+                            <p><strong>Piezas por placa:</strong> ${bestCount}</p>
+                            <p><strong>Subtotal (Piezas x Cantidad):</strong> <span style="color:#27ae60; font-weight:bold; font-size:18px;">${totalEstaPlaca} piezas</span></p>
+                            <p><strong>Desperdicio por placa:</strong> ${desperdicio}%</p>
+                        </div>
+                        <div class="canvas-container">
+                            <canvas id="${canvasId}"></canvas>
+                            <p style="font-size:12px; color:#7f8c8d;">Diagrama de 1 placa (x${qty})</p>
+                        </div>
+                    </div>
+                `;
+                desgloseContainer.insertAdjacentHTML('beforeend', resultHTML);
+
+                // Dibujar en el canvas generado
+                dibujar(canvasId, bW, bH, drawW, drawH, cols, rows);
+            });
+
+            // Mostrar el gran total
+            const divTotal = document.getElementById('grand-total');
+            divTotal.style.display = 'block';
+            divTotal.innerHTML = `🎉 Puedes obtener un total de <u>${granTotalPiezas} piezas</u> en todo el proyecto`;
+        }
+
+        // Función para dibujar (adaptada para recibir el ID del canvas dinámico)
+        function dibujar(canvasId, boardW, boardH, pieceW, pieceH, cols, rows) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
-            // Limpiar canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Calcular escala dinámica para que la placa siempre quepa en pantalla
-            const maxPx = window.innerWidth < 600 ? 300 : 500;
+            // Escala dinámica (máximo 300px de ancho para mantener el layout limpio)
+            const maxPx = 300;
             const scale = Math.min(maxPx / boardW, maxPx / boardH);
             
             canvas.width = boardW * scale;
@@ -134,8 +226,8 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Dibujar piezas
-            ctx.fillStyle = '#3498db'; // Color azul para las piezas
-            ctx.strokeStyle = '#2c3e50'; // Borde oscuro
+            ctx.fillStyle = '#3498db';
+            ctx.strokeStyle = '#2c3e50';
             ctx.lineWidth = 1;
 
             for (let r = 0; r < rows; r++) {
@@ -149,18 +241,6 @@
                     ctx.strokeRect(x, y, width, height);
                 }
             }
-        }
-
-        // Estado inicial del canvas al cargar la página
-        window.onload = function() {
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ecf0f1';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#bdc3c7';
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Ingresa medidas y calcula', canvas.width/2, canvas.height/2);
         }
     </script>
 </body>
