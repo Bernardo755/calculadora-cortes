@@ -29,7 +29,7 @@
     #board-container { width: 100%; height: 650px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; overflow: hidden; position: relative; }
     #board { background: #e2e8f0; border: 2px solid #94a3b8; position: relative; transform-origin: center; }
     
-    /* Piezas arrastrabiles */
+    /* Piezas arrastrables */
     .piece { position: absolute; background: #3b82f6; color: white; border: 1px solid #1d4ed8; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; text-align: center; cursor: move; user-select: none; border-radius: 3px; font-weight: 500; }
     .piece:hover { filter: brightness(1.1); }
     .piece span { pointer-events: none; }
@@ -59,10 +59,10 @@
 
     <button onclick="updateBoard()">Actualizar Tablero</button>
 
-    <h2 style="margin-top: 25px;">2. Agregar Pieza</h2>
+    <h2 style="margin-top: 25px;">2. Agregar Piezas</h2>
     <div class="group">
       <label>Etiqueta / Nombre</label>
-      <input type="text" id="piece-name" placeholder="Ej: Lateral Izquierdo">
+      <input type="text" id="piece-name" placeholder="Ej: Estante">
     </div>
     <div class="group row">
       <div>
@@ -74,14 +74,18 @@
         <input type="number" id="piece-h" value="400">
       </div>
     </div>
-    <button onclick="addPiece()">+ Agregar Pieza</button>
+    <div class="group">
+      <label>Cantidad</label>
+      <input type="number" id="piece-qty" value="1" min="1">
+    </div>
+    <button onclick="addPieces()">+ Agregar Piezas</button>
     <button class="clear" onclick="clearPieces()">Limpiar Piezas</button>
   </div>
 
   <!-- Área Visual -->
   <div class="main-area">
     <div class="instructions">
-      💡 <strong>Controles:</strong> Arrastra las piezas sobre el tablero para acomodarlas. Haz <strong>clic</strong> sobre una pieza para rotarla 90°. El borde rojo discontinuo indica el margen del disco de sierra.
+      💡 <strong>Controles:</strong> Arrastra las piezas sobre el tablero para acomodarlas. Haz <strong>clic</strong> sobre una pieza para rotarla 90°. El borde discontinuo rojo indica el margen del disco de sierra.
     </div>
     <div id="board-container">
       <div id="board"></div>
@@ -90,7 +94,7 @@
 </div>
 
 <script>
-  let scale = 1; // Factor de escala para ajustar al visor
+  let scale = 1;
   let activePiece = null;
   let offsetX = 0, offsetY = 0;
 
@@ -101,7 +105,6 @@
     const bw = parseFloat(document.getElementById('board-w').value) || 1000;
     const bh = parseFloat(document.getElementById('board-h').value) || 1000;
 
-    // Calcular escala para ajustar al contenedor de pantalla
     const maxW = container.clientWidth - 40;
     const maxH = container.clientHeight - 40;
     scale = Math.min(maxW / bw, maxH / bh);
@@ -109,52 +112,56 @@
     board.style.width = (bw * scale) + 'px';
     board.style.height = (bh * scale) + 'px';
 
-    // Ajustar posiciones de piezas si cambia la escala
     document.querySelectorAll('.piece').forEach(p => {
       p.style.outline = `${(parseFloat(document.getElementById('kerf').value) || 0) * scale}px dashed rgba(239, 68, 68, 0.6)`;
     });
   }
 
-  function addPiece() {
-    const name = document.getElementById('piece-name').value || 'Pieza';
+  function addPieces() {
+    const baseName = document.getElementById('piece-name').value || 'Pieza';
     const pw = parseFloat(document.getElementById('piece-w').value);
     const ph = parseFloat(document.getElementById('piece-h').value);
+    const qty = parseInt(document.getElementById('piece-qty').value) || 1;
     const kerf = parseFloat(document.getElementById('kerf').value) || 0;
 
-    if (!pw || !ph) return alert('Por favor ingresa dimensiones válidas.');
+    if (!pw || !ph || qty < 1) return alert('Por favor ingresa valores válidos.');
 
     const board = document.getElementById('board');
-    const piece = document.createElement('div');
-    piece.className = 'piece';
-    
-    // Guardar dimensiones reales en atributos
-    piece.dataset.w = pw;
-    piece.dataset.h = ph;
-    piece.dataset.name = name;
 
-    // Margen de sierra visualizado con outline
-    piece.style.outline = `${kerf * scale}px dashed rgba(239, 68, 68, 0.6)`;
-    piece.style.outlineOffset = '0px';
+    // Bucle para crear la cantidad seleccionada de piezas
+    for (let i = 0; i < qty; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'piece';
+      
+      const displayName = qty > 1 ? `${baseName} #${i + 1}` : baseName;
 
-    updatePieceSize(piece);
+      piece.dataset.w = pw;
+      piece.dataset.h = ph;
+      piece.dataset.name = displayName;
 
-    // Posición inicial
-    piece.style.left = '10px';
-    piece.style.top = '10px';
+      piece.style.outline = `${kerf * scale}px dashed rgba(239, 68, 68, 0.6)`;
+      piece.style.outlineOffset = '0px';
 
-    // Eventos de Arrastre
-    piece.addEventListener('mousedown', startDrag);
-    // Rotar al hacer clic simple
-    piece.addEventListener('click', (e) => {
-      if (piece.dataset.dragged === 'true') return; // Evitar rotar al terminar de arrastrar
-      const currentW = parseFloat(piece.dataset.w);
-      const currentH = parseFloat(piece.dataset.h);
-      piece.dataset.w = currentH;
-      piece.dataset.h = currentW;
       updatePieceSize(piece);
-    });
 
-    board.appendChild(piece);
+      // Escalonar ligeramente las posiciones iniciales para que no queden 100% encimadas
+      const offset = (i * 15) % 150;
+      piece.style.left = (10 + offset) + 'px';
+      piece.style.top = (10 + offset) + 'px';
+
+      // Eventos de Arrastre y Rotación
+      piece.addEventListener('mousedown', startDrag);
+      piece.addEventListener('click', (e) => {
+        if (piece.dataset.dragged === 'true') return;
+        const currentW = parseFloat(piece.dataset.w);
+        const currentH = parseFloat(piece.dataset.h);
+        piece.dataset.w = currentH;
+        piece.dataset.h = currentW;
+        updatePieceSize(piece);
+      });
+
+      board.appendChild(piece);
+    }
   }
 
   function updatePieceSize(piece) {
@@ -185,7 +192,6 @@
     let x = (e.clientX - boardRect.left - offsetX) / scale;
     let y = (e.clientY - boardRect.top - offsetY) / scale;
 
-    // Limites del tablero
     const bw = parseFloat(document.getElementById('board-w').value);
     const bh = parseFloat(document.getElementById('board-h').value);
     const pw = parseFloat(activePiece.dataset.w);
@@ -208,7 +214,6 @@
     document.getElementById('board').innerHTML = '';
   }
 
-  // Inicializar al cargar
   window.onload = updateBoard;
   window.onresize = updateBoard;
 </script>
