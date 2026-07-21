@@ -3,61 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Cortes Pro</title>
+    <title>Optimizador de Cortes Pro (Aprovechamiento Sobrante)</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 900px; width: 100%; }
-        h1, h2 { color: #2c3e50; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); max-width: 950px; width: 100%; }
+        h1, h2, h3 { color: #2c3e50; text-align: center; }
         
-        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #ecf0f1; }
+        .section { margin-bottom: 25px; padding: 20px; border: 1px solid #ecf0f1; border-radius: 8px; background-color: #fff; }
+        .section-header { font-weight: bold; font-size: 1.1em; margin-bottom: 15px; color: #7f8c8d; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 5px; }
+
         .input-row { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 15px; flex-wrap: wrap; }
-        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 120px; }
+        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 140px; }
         
-        label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        input { padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 16px; }
+        label { font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #34495e; }
+        input { padding: 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 16px; transition: border-color 0.2s; }
+        input:focus { border-color: #3498db; outline: none; }
         
-        button { background-color: #2c3e50; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        button:hover { background-color: #1a252f; }
-        .btn-add { background-color: #27ae60; margin-top: 10px; }
+        button { border: none; padding: 12px 18px; border-radius: 6px; cursor: pointer; font-size: 16px; transition: background 0.3s, transform 0.1s; font-weight: bold; }
+        button:active { transform: translateY(1px); }
+        .btn-add { background-color: #27ae60; color: white; margin-top: 10px; }
         .btn-add:hover { background-color: #219653; }
-        .btn-delete { background-color: #e74c3c; padding: 10px; }
+        .btn-delete { background-color: #e74c3c; color: white; padding: 10px; font-size: 14px;}
         .btn-delete:hover { background-color: #c0392b; }
-        .btn-calc { background-color: #3498db; width: 100%; font-size: 18px; padding: 15px; margin-top: 10px; font-weight: bold; }
+        .btn-calc { background-color: #3498db; color: white; width: 100%; font-size: 18px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
         .btn-calc:hover { background-color: #2980b9; }
 
-        /* Resultados */
-        .grand-total { text-align: center; background-color: #d4edda; color: #155724; padding: 20px; border-radius: 8px; margin: 20px 0; font-size: 24px; font-weight: bold; display: none; }
+        /* Estado General y Mensajes */
+        .status-banner { text-align: center; padding: 25px; border-radius: 8px; margin: 25px 0; font-size: 20px; font-weight: bold; border-width: 2px; border-style: solid; display: none; }
+        .status-ok { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .status-warn { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .grand-summary { margin-top: 10px; font-size: 16px; font-weight: normal; }
+
+        /* Reporte Desglosado */
+        .board-result { display: flex; flex-wrap: wrap; gap: 20px; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; align-items: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .board-info { flex: 1; min-width: 280px; }
+        .board-info h3 { text-align: left; margin-top: 0; color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .board-info p { margin: 8px 0; font-size: 16px; display: flex; justify-content: space-between;}
+        .board-info .stat-val { font-weight: bold; color: #2c3e50; }
         
-        .board-result { display: flex; flex-wrap: wrap; gap: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; align-items: center; }
-        .board-info { flex: 1; min-width: 250px; }
-        .board-info p { margin: 5px 0; font-size: 16px; }
-        .canvas-container { flex: 1; min-width: 300px; text-align: center; }
-        canvas { border: 2px solid #2c3e50; background-color: #fff; max-width: 100%; height: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .canvas-container { flex: 1; min-width: 320px; text-align: center; }
+        canvas { border: 2px solid #2c3e50; background-color: #f8f9fa; max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .canvas-legend { font-size: 12px; color: #7f8c8d; margin-top: 5px; display: flex; justify-content: center; gap: 10px;}
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .color-box { width: 12px; height: 12px; border-radius: 2px; border: 1px solid #2c3e50; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Calculadora de Cortes Pro</h1>
+        <h1>Optimizador de Cortes 2D Pro</h1>
+        <p style="text-align:center; color: #7f8c8d; margin-top: -10px;">Aprovechamiento avanzado de sobrantes (Bin Packing Greedy)</p>
 
-        <!-- SECCIÓN 1: LA PIEZA -->
+        <!-- SECCIÓN 1: EL OBJETIVO -->
         <div class="section">
-            <h2>1. Medidas de la Pieza a cortar</h2>
+            <div class="section-header">1. Objetivo del Proyecto</div>
             <div class="input-row">
-                <div class="input-group">
-                    <label>Ancho (ej. 50):</label>
-                    <input type="number" id="piezaW" value="50" min="1">
+                <div class="input-group" style="flex: 2;">
+                    <label>Medidas Pieza (Ancho x Alto):</label>
+                    <div style="display:flex; gap: 10px;">
+                        <input type="number" id="piezaW" value="50" min="1" placeholder="Ej. 50">
+                        <span style="align-self:center; font-weight:bold;">x</span>
+                        <input type="number" id="piezaH" value="30" min="1" placeholder="Ej. 30">
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>Alto (ej. 30):</label>
-                    <input type="number" id="piezaH" value="30" min="1">
+                <div class="input-group" style="flex: 1;">
+                    <label>Total Piezas REQUERIDAS:</label>
+                    <input type="number" id="requiredQty" value="100" min="1" placeholder="Ej. 100">
                 </div>
             </div>
         </div>
 
         <!-- SECCIÓN 2: LAS PLACAS -->
         <div class="section">
-            <h2>2. Placas Disponibles en inventario</h2>
+            <div class="section-header">2. Inventario de Placas Disponibles</div>
             <div id="placas-container">
                 <!-- Fila inicial por defecto -->
                 <div class="input-row placa-item">
@@ -70,8 +88,8 @@
                         <input type="number" class="p-h" value="122" min="1">
                     </div>
                     <div class="input-group">
-                        <label>Cantidad:</label>
-                        <input type="number" class="p-qty" value="1" min="1">
+                        <label>Cantidad Disponible:</label>
+                        <input type="number" class="p-qty" value="2" min="1">
                     </div>
                     <button class="btn-delete" onclick="eliminarPlaca(this)">🗑️ Eliminar</button>
                 </div>
@@ -79,10 +97,15 @@
             <button class="btn-add" onclick="agregarPlaca()">+ Añadir otra medida de placa</button>
         </div>
 
-        <button class="btn-calc" onclick="calcularTotal()">Calcular Proyecto Completo</button>
+        <button class="btn-calc" onclick="optimizarProyecto()">🚀 Optimizar Cortes del Proyecto</button>
 
-        <!-- RESULTADOS -->
-        <div id="grand-total" class="grand-total"></div>
+        <!-- RESULTADOS GENERALES -->
+        <div id="status-banner" class="status-banner">
+            <div id="status-message"></div>
+            <div id="grand-summary" class="grand-summary"></div>
+        </div>
+
+        <!-- REPORTE VISUAL DESGLOSADO -->
         <div id="resultados-desglose"></div>
     </div>
 
@@ -95,14 +118,14 @@
             row.innerHTML = `
                 <div class="input-group">
                     <label>Ancho Placa:</label>
-                    <input type="number" class="p-w" value="" placeholder="Ej. 120" min="1">
+                    <input type="number" class="p-w" placeholder="Ej. 120" min="1">
                 </div>
                 <div class="input-group">
                     <label>Alto Placa:</label>
-                    <input type="number" class="p-h" value="" placeholder="Ej. 120" min="1">
+                    <input type="number" class="p-h" placeholder="Ej. 120" min="1">
                 </div>
                 <div class="input-group">
-                    <label>Cantidad:</label>
+                    <label>Cantidad Disponible:</label>
                     <input type="number" class="p-qty" value="1" min="1">
                 </div>
                 <button class="btn-delete" onclick="eliminarPlaca(this)">🗑️ Eliminar</button>
@@ -110,137 +133,231 @@
             container.appendChild(row);
         }
 
-        // Función para eliminar una fila
         function eliminarPlaca(btn) {
             const row = btn.parentElement;
-            // Evitar eliminar si es la única fila que queda
-            if (document.querySelectorAll('.placa-item').length > 1) {
-                row.remove();
-            } else {
-                alert("Debes tener al menos una placa.");
-            }
+            if (document.querySelectorAll('.placa-item').length > 1) { row.remove(); } 
+            else { alert("Debes tener al menos una placa en inventario."); }
         }
 
-        // Función principal de cálculo
-        function calcularTotal() {
-            // Obtener pieza
+        // --- CORE ALGORÍTMICO ---
+
+        // Función Greedy Recursiva (Guillotine cut variant) para llenar rectángulos pequeños
+        // Tries both orientations of target (pW x pH)
+        function recursiveGuillotinePack(binW, binH, pW, pH, xOff, yOff) {
+            if ((pW > binW || pH > binH) && (pH > binW || pW > binH)) return []; // Base case: doesn't fit
+
+            // Try placing Normal (pW x pH)
+            let placementsNormal = [];
+            if (pW <= binW && pH <= binH) {
+                placementsNormal.push({ x: xOff, y: yOff, w: pW, h: pH, type: 'packed' });
+                // Greedy split: Right rectangle first, then Bottom rectangle
+                let subR = recursiveGuillotinePack(binW - pW, pH, pW, pH, xOff + pW, yOff);
+                let subB = recursiveGuillotinePack(binW, binH - pH, pW, pH, xOff, yOff + pH);
+                placementsNormal = placementsNormal.concat(subR, subB);
+            }
+
+            // Try placing Rotated (pH x pW)
+            let placementsRotated = [];
+            if (pH <= binW && pW <= binH) {
+                placementsRotated.push({ x: xOff, y: yOff, w: pH, h: pW, type: 'packed' });
+                let subR = recursiveGuillotinePack(binW - pH, pW, pW, pH, xOff + pH, yOff);
+                let subB = recursiveGuillotinePack(binW, binH - pW, pW, pH, xOff, yOff + pW);
+                placementsRotated = placementsRotated.concat(subR, subB);
+            }
+
+            // Return the orientation that packs more pieces
+            return placementsNormal.length >= placementsRotated.length ? placementsNormal : placementsRotated;
+        }
+
+        // Función para llenar UNA placa combinando cuadrícula principal uniforme + empaquetado de guillotina en sobrantes
+        function optimizeSingleBoard(bW, bH, pW, pH) {
+            // 1. Calcular mejor cuadrícula uniforme (sin rotaciones aleatorias)
+            const cols1 = Math.floor(bW / pW);
+            const rows1 = Math.floor(bH / pH);
+            const count1 = cols1 * rows1;
+
+            const cols2 = Math.floor(bW / pH);
+            const rows2 = Math.floor(bH / pW);
+            const count2 = cols2 * rows2;
+
+            let bestGrid = [];
+            let mainW, mainH, gridCols, gridRows;
+
+            // Pick best basic grid
+            if (count1 >= count2) {
+                mainW = pW; mainH = pH; gridCols = cols1; gridRows = rows1;
+            } else {
+                mainW = pH; mainH = pW; gridCols = cols2; gridRows = rows2;
+            }
+
+            // Generar coordenadas de la cuadrícula principal
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    bestGrid.push({ x: c * mainW, y: r * mainH, w: mainW, h: mainH, type: 'grid' });
+                }
+            }
+
+            // 2. APROVECHAMIENTO DE SOBRANTES (The 'Sobrante' space)
+            // Calculamos los dos rectángulos de desperdicio principales
+            let packedPieces = [];
+            
+            // Rectángulo de desperdicio INFERIOR (Bottom)
+            const wasteBottomW = bW; // Ocupa todo el ancho
+            const wasteBottomH = bH - (gridRows * mainH);
+            if (wasteBottomH > 0) {
+                const bottomPack = recursiveGuillotinePack(wasteBottomW, wasteBottomH, pW, pH, 0, gridRows * mainH);
+                packedPieces = packedPieces.concat(bottomPack);
+            }
+
+            // Rectángulo de desperdicio DERECHO (Right - excluding the bottom waste area already handled)
+            const wasteRightW = bW - (gridCols * mainW);
+            const wasteRightH = gridRows * mainH; // Solo la altura de la cuadrícula principal
+            if (wasteRightW > 0) {
+                const rightPack = recursiveGuillotinePack(wasteRightW, wasteRightH, pW, pH, gridCols * mainW, 0);
+                packedPieces = packedPieces.concat(rightPack);
+            }
+
+            const totalPlacements = bestGrid.concat(packedPieces);
+            const gridCount = bestGrid.length;
+            const packedCount = packedPieces.length;
+
+            return {
+                placements: totalPlacements,
+                totalCount: totalPlacements.length,
+                gridCount: gridCount,
+                packedCount: packedCount
+            };
+        }
+
+        // --- GESTIÓN DEL PROYECTO ---
+
+        function optimizarProyecto() {
+            // Get inputs
             const pW = parseFloat(document.getElementById('piezaW').value);
             const pH = parseFloat(document.getElementById('piezaH').value);
+            const requiredQty = parseInt(document.getElementById('requiredQty').value);
 
-            if (!pW || !pH) return alert("Ingresa medidas válidas para la pieza.");
+            if (!pW || !pH || !requiredQty || pW<=0 || pH<=0 || requiredQty<=0) return alert("Ingresa medidas y cantidades válidas.");
 
-            // Obtener todas las placas
             const placasDOM = document.querySelectorAll('.placa-item');
-            let granTotalPiezas = 0;
-            const desgloseContainer = document.getElementById('resultados-desglose');
-            desgloseContainer.innerHTML = ''; // Limpiar resultados anteriores
-
-            // Iterar sobre cada tipo de placa ingresada
+            let inventarioPlacas = [];
             placasDOM.forEach((fila, index) => {
                 const bW = parseFloat(fila.querySelector('.p-w').value);
                 const bH = parseFloat(fila.querySelector('.p-h').value);
                 const qty = parseInt(fila.querySelector('.p-qty').value);
-
-                if (!bW || !bH || !qty) return; // Saltar si hay campos vacíos
-                
-                if ((pW > bW || pH > bH) && (pW > bH || pH > bW)) {
-                    // La pieza no cabe de ninguna forma en esta placa
-                    desgloseContainer.innerHTML += `
-                        <div class="board-result" style="background:#f8d7da; border-color:#f5c6cb; color:#721c24;">
-                            <p>⚠️ La pieza (${pW}x${pH}) es demasiado grande para la placa de ${bW}x${bH}.</p>
-                        </div>
-                    `;
-                    return; // Continuar con la siguiente placa
-                }
-
-                // Calcular Opción 1: Sin rotar
-                const cols1 = Math.floor(bW / pW);
-                const rows1 = Math.floor(bH / pH);
-                const count1 = cols1 * rows1;
-
-                // Calcular Opción 2: Rotando 90 grados
-                const cols2 = Math.floor(bW / pH);
-                const rows2 = Math.floor(bH / pW);
-                const count2 = cols2 * rows2;
-
-                // Elegir la mejor
-                let bestCount, drawW, drawH, cols, rows;
-                if (count1 >= count2) {
-                    bestCount = count1; cols = cols1; rows = rows1; drawW = pW; drawH = pH;
-                } else {
-                    bestCount = count2; cols = cols2; rows = rows2; drawW = pH; drawH = pW;
-                }
-
-                const totalEstaPlaca = bestCount * qty;
-                granTotalPiezas += totalEstaPlaca;
-
-                // Calcular desperdicio
-                const areaPlaca = bW * bH;
-                const areaUsada = bestCount * (pW * pH);
-                const desperdicio = (((areaPlaca - areaUsada) / areaPlaca) * 100).toFixed(1);
-
-                // Crear HTML para el reporte de esta placa específica
-                const canvasId = `canvas-${index}`;
-                const resultHTML = `
-                    <div class="board-result">
-                        <div class="board-info">
-                            <h3 style="margin-top:0; color:#2980b9;">Placa: ${bW} x ${bH}</h3>
-                            <p><strong>Cantidad en inventario:</strong> ${qty}</p>
-                            <p><strong>Piezas por placa:</strong> ${bestCount}</p>
-                            <p><strong>Subtotal (Piezas x Cantidad):</strong> <span style="color:#27ae60; font-weight:bold; font-size:18px;">${totalEstaPlaca} piezas</span></p>
-                            <p><strong>Desperdicio por placa:</strong> ${desperdicio}%</p>
-                        </div>
-                        <div class="canvas-container">
-                            <canvas id="${canvasId}"></canvas>
-                            <p style="font-size:12px; color:#7f8c8d;">Diagrama de 1 placa (x${qty})</p>
-                        </div>
-                    </div>
-                `;
-                desgloseContainer.insertAdjacentHTML('beforeend', resultHTML);
-
-                // Dibujar en el canvas generado
-                dibujar(canvasId, bW, bH, drawW, drawH, cols, rows);
+                if (bW && bH && qty) inventarioPlacas.push({ w: bW, h: bH, qty: qty, index: index });
             });
 
-            // Mostrar el gran total
-            const divTotal = document.getElementById('grand-total');
-            divTotal.style.display = 'block';
-            divTotal.innerHTML = `🎉 Puedes obtener un total de <u>${granTotalPiezas} piezas</u> en todo el proyecto`;
+            if (inventarioPlacas.length === 0) return alert("Añade al menos una placa con medidas.");
+
+            let totalCortadas = 0;
+            const desgloseContainer = document.getElementById('resultados-desglose');
+            desgloseContainer.innerHTML = ''; // Limpiar
+
+            // Iterar inventario vs Requerimiento
+            for (const placa of inventarioPlacas) {
+                for (let i = 0; i < placa.qty; i++) {
+                    if (totalCortadas >= requiredQty) break; // Objetivo cumplido
+
+                    // 1. Optimizar empaquetado avanzdo para UNA placa
+                    const result = optimizeSingleBoard(placa.w, placa.qty > 100 ? placa.h : placa.h, pW, pH);
+
+                    if (result.totalCount === 0) {
+                        desgloseContainer.innerHTML += `<div class="board-result" style="background:#fff3cd; color:#856404; border-color:#ffeeba;"><p>⚠️ La pieza (${pW}x${pH}) no cabe en la placa #${placa.index+1} (${placa.w}x${placa.h}). Saltando...</p></div>`;
+                        break; // No cabe de ninguna forma en este tipo de placa, saltar al siguiente tipo
+                    }
+
+                    // 2. Determinar cuántas necesitamos realmente de esta placa (no pasarnos del objetivo)
+                    const neededCount = requiredQty - totalCortadas;
+                    const piecesToTakeCount = Math.min(result.totalCount, neededCount);
+                    
+                    // Tomar solo las piezas necesarias (priorizando las de cuadrícula)
+                    const placementsTaken = result.placements.slice(0, piecesToTakeCount);
+                    const piecesTakenFromPacked = Math.max(0, piecesToTakeCount - result.gridCount);
+                    const piecesTakenFromGrid = piecesToTakeCount - piecesTakenFromPacked;
+
+                    totalCortadas += piecesToTakeCount;
+
+                    // 3. Renderizar Reporte Visual
+                    const areaPlaca = placa.w * placa.h;
+                    const areaUsada = piecesToTakeCount * (pW * pH);
+                    const desperdicio = (((areaPlaca - areaUsada) / areaPlaca) * 100).toFixed(1);
+
+                    const canvasId = `canvas-${placa.index}-${i}`;
+                    desgloseContainer.innerHTML += `
+                        <div class="board-result">
+                            <div class="board-info">
+                                <h3>Placa #${placa.index + 1} (${i+1}/${placa.qty}): ${placa.w} x ${placa.h}</h3>
+                                <p>Piezas Obtenidas aquí: <span class="stat-val" style="color:#27ae60; font-size:1.1em;">${piecesToTakeCount}</span></p>
+                                <p style="font-size: 0.9em; color:#7f8c8d;">- De cuadrícula principal: <span>${piecesTakenFromGrid}</span></p>
+                                <p style="font-size: 0.9em; color:#7f8c8d;">- De sobrantes rotados: <span>${piecesTakenFromPacked}</span></p>
+                                <p>Aprovechamiento Real: <span class="stat-val">${(100 - desperdicio)}%</span></p>
+                                <p>Desperdicio Real: <span class="stat-val">${desperdicio}%</span></p>
+                            </div>
+                            <div class="canvas-container">
+                                <canvas id="${canvasId}"></canvas>
+                                <div class="canvas-legend">
+                                    <div class="legend-item"><div class="color-box" style="background:#3498db;"></div> Cuadrícula</div>
+                                    <div class="legend-item"><div class="color-box" style="background:#a55eea;"></div> Sobrante Rotado</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // Dibujar (después de añadir al DOM)
+                    setTimeout(() => dibujarEmpaquetado(canvasId, placa.w, placa.h, placementsTaken), 0);
+                }
+                if (totalCortadas >= requiredQty) break; 
+            }
+
+            // --- ESTADO FINAL ---
+            const missing = requiredQty - totalCortadas;
+            const banner = document.getElementById('status-banner');
+            const msgDom = document.getElementById('status-message');
+            const summaryDom = document.getElementById('grand-summary');
+            
+            banner.style.display = 'block';
+            summaryDom.innerHTML = `Objetivo: <b>${requiredQty}</b> | Cortadas: <b>${totalCortadas}</b> | Faltan: <b style="color:${missing>0?'#e74c3c':'#27ae60'};">${missing}</b>`;
+
+            if (missing > 0) {
+                banner.className = 'status-banner status-warn';
+                msgDom.innerHTML = `⚠️ SE NECESITAN MÁS PLACAS`;
+                msgDom.innerHTML += `<p style="font-size: 16px; font-weight:normal; margin-top:5px;">El inventario disponible no es suficiente para completar el pedido.</p>`;
+            } else {
+                banner.className = 'status-banner status-ok';
+                msgDom.innerHTML = `✅ ¡TODO CABE!`;
+                msgDom.innerHTML += `<p style="font-size: 16px; font-weight:normal; margin-top:5px;">Tienes suficiente material en inventario para las ${requiredQty} piezas.</p>`;
+            }
         }
 
-        // Función para dibujar (adaptada para recibir el ID del canvas dinámico)
-        function dibujar(canvasId, boardW, boardH, pieceW, pieceH, cols, rows) {
+        // Función para dibujar el layout complejo de una placa
+        function dibujarEmpaquetado(canvasId, boardW, boardH, placements) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
-            // Escala dinámica (máximo 300px de ancho para mantener el layout limpio)
-            const maxPx = 300;
-            const scale = Math.min(maxPx / boardW, maxPx / boardH);
+            const maxPx = 400; // Máximo ancho visual
+            const scale = Math.min(maxPx / boardW, 300 / boardH); // Limitar también altura visual
             
             canvas.width = boardW * scale;
             canvas.height = boardH * scale;
 
-            // Dibujar fondo (Placa)
-            ctx.fillStyle = '#ecf0f1';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f8f9fa'; ctx.fillRect(0, 0, canvas.width, canvas.height); // Fondo
 
-            // Dibujar piezas
-            ctx.fillStyle = '#3498db';
             ctx.strokeStyle = '#2c3e50';
             ctx.lineWidth = 1;
 
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const x = c * pieceW * scale;
-                    const y = r * pieceH * scale;
-                    const width = pieceW * scale;
-                    const height = pieceH * scale;
+            placements.forEach(p => {
+                // Color diferente según si es cuadrícula principal o empaquetado de sobrante
+                ctx.fillStyle = (p.type === 'grid') ? '#3498db' : '#a55eea'; // Azul vs Púrpura
 
-                    ctx.fillRect(x, y, width, height);
-                    ctx.strokeRect(x, y, width, height);
-                }
-            }
+                const x = p.x * scale;
+                const y = p.y * scale;
+                const width = p.w * scale;
+                const height = p.h * scale;
+
+                ctx.fillRect(x, y, width, height);
+                ctx.strokeRect(x, y, width, height);
+            });
         }
     </script>
 </body>
