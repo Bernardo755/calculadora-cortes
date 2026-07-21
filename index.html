@@ -1,323 +1,217 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acomodo de Múltiples Piezas</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 900px; width: 100%; }
-        h1, h2 { color: #2c3e50; text-align: center; margin-bottom: 5px; }
-        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 25px; }
-        
-        .section { margin-bottom: 25px; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #fff; }
-        .section-header { font-weight: bold; font-size: 1.1em; margin-bottom: 15px; color: #34495e; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 5px; }
-
-        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; background: #f8f9fa; padding: 10px; border-radius: 6px; }
-        .pieza-id-badge { background: #34495e; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; min-width: 70px; text-align: center; }
-        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 100px; }
-        
-        label { font-weight: 600; margin-bottom: 4px; font-size: 13px; color: #555; }
-        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
-        
-        button { border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.2s; }
-        .btn-add { background-color: #27ae60; color: white; margin-top: 5px; }
-        .btn-add:hover { background-color: #219653; }
-        .btn-delete { background-color: #e74c3c; color: white; padding: 8px 12px; font-size: 13px; }
-        .btn-delete:hover { background-color: #c0392b; }
-        .btn-calc { background-color: #2980b9; color: white; width: 100%; font-size: 18px; padding: 15px; margin-top: 10px; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.2); }
-        .btn-calc:hover { background-color: #2471a3; }
-
-        /* Reporte y Canvas */
-        .visualization-area { margin-top: 30px; display: none; }
-        .canvas-wrapper { text-align: center; overflow-x: auto; padding: 10px; background: #ecf0f1; border-radius: 8px; margin-bottom: 20px; }
-        canvas { border: 2px solid #2c3e50; background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
-        .report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .report-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 6px; border-left: 5px solid #ccc; }
-        .report-card h3 { margin: 0 0 10px 0; font-size: 16px; display: flex; justify-content: space-between; }
-        .report-card p { margin: 5px 0; font-size: 14px; }
-        .badge-ok { color: #27ae60; font-weight: bold; }
-        .badge-fail { color: #e74c3c; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimizador de Cortes de Madera</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; padding: 20px; color: #1e293b; }
+    .container { display: flex; gap: 20px; max-width: 1400px; margin: 0 auto; }
+    
+    /* Panel lateral de controles */
+    .sidebar { width: 320px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); flex-shrink: 0; }
+    h2 { font-size: 18px; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+    .group { margin-bottom: 15px; }
+    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569; }
+    input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+    input:focus { outline: none; border-color: #2563eb; }
+    .row { display: flex; gap: 10px; }
+    button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #1d4ed8; }
+    button.clear { background: #ef4444; margin-top: 10px; }
+    button.clear:hover { background: #dc2626; }
+    
+    /* Área del Tablero */
+    .main-area { flex-grow: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .instructions { font-size: 13px; color: #64748b; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 4px solid #2563eb; }
+    
+    #board-container { width: 100%; height: 650px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; overflow: hidden; position: relative; }
+    #board { background: #e2e8f0; border: 2px solid #94a3b8; position: relative; transform-origin: center; }
+    
+    /* Piezas arrastrabiles */
+    .piece { position: absolute; background: #3b82f6; color: white; border: 1px solid #1d4ed8; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; text-align: center; cursor: move; user-select: none; border-radius: 3px; font-weight: 500; }
+    .piece:hover { filter: brightness(1.1); }
+    .piece span { pointer-events: none; }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Acomodo en Placa Única</h1>
-        <p class="subtitle">Ingresa tu margen principal y todas las piececitas que necesitas cortar</p>
-
-        <!-- SECCIÓN 1: LA PLACA PRINCIPAL -->
-        <div class="section">
-            <div class="section-header">1. El Margen Principal (La Placa)</div>
-            <div style="display: flex; gap: 15px;">
-                <div class="input-group">
-                    <label>Ancho Total:</label>
-                    <input type="number" id="placaW" value="244" min="1">
-                </div>
-                <div class="input-group">
-                    <label>Alto Total:</label>
-                    <input type="number" id="placaH" value="122" min="1">
-                </div>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 2: LAS PIEZAS A CORTAR -->
-        <div class="section">
-            <div class="section-header">2. Piezas a Cortar dentro de la placa</div>
-            <div id="piezas-container">
-                <!-- Fila de pieza inicial -->
-                <div class="input-row pieza-item">
-                    <div class="pieza-id-badge">Pieza #1</div>
-                    <div class="input-group">
-                        <label>Ancho:</label>
-                        <input type="number" class="pz-w" value="50" min="1">
-                    </div>
-                    <div class="input-group">
-                        <label>Alto:</label>
-                        <input type="number" class="pz-h" value="30" min="1">
-                    </div>
-                    <div class="input-group">
-                        <label>¿Cuántas?:</label>
-                        <input type="number" class="pz-qty" value="5" min="1">
-                    </div>
-                    <button class="btn-delete" onclick="eliminarPieza(this)">Eliminar</button>
-                </div>
-            </div>
-            <button class="btn-add" onclick="agregarPieza()">+ Añadir otro tamaño de pieza</button>
-        </div>
-
-        <button class="btn-calc" onclick="calcularAcomodo()">Calcular y Dibujar Acomodo</button>
-
-        <!-- RESULTADOS -->
-        <div id="visualization-area" class="visualization-area">
-            <h2 style="text-align: left; margin-bottom: 15px;">Visualización del Corte</h2>
-            <div class="canvas-wrapper">
-                <canvas id="canvas"></canvas>
-            </div>
-            <h2 style="text-align: left; margin-bottom: 15px;">Reporte de Resultados</h2>
-            <div id="reporte" class="report-grid"></div>
-        </div>
+<div class="container">
+  <!-- Panel de Configuración -->
+  <div class="sidebar">
+    <h2>1. Tablero Principal</h2>
+    <div class="group row">
+      <div>
+        <label>Ancho (mm)</label>
+        <input type="number" id="board-w" value="2440">
+      </div>
+      <div>
+        <label>Alto (mm)</label>
+        <input type="number" id="board-h" value="1220">
+      </div>
+    </div>
+    
+    <div class="group">
+      <label>Grosor del disco / Margen (mm)</label>
+      <input type="number" id="kerf" value="3">
     </div>
 
-    <script>
-        // Paleta de colores para diferenciar las piezas
-        const colores = ['#e74c3c', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#1abc9c', '#34495e', '#ff7979', '#badc58', '#f8a5c2'];
-        let contadorPiezas = 1;
+    <button onclick="updateBoard()">Actualizar Tablero</button>
 
-        function actualizarNumeros() {
-            const filas = document.querySelectorAll('.pieza-item');
-            filas.forEach((fila, index) => {
-                fila.querySelector('.pieza-id-badge').innerText = `Pieza #${index + 1}`;
-                fila.dataset.id = index + 1;
-            });
-            contadorPiezas = filas.length;
-        }
+    <h2 style="margin-top: 25px;">2. Agregar Pieza</h2>
+    <div class="group">
+      <label>Etiqueta / Nombre</label>
+      <input type="text" id="piece-name" placeholder="Ej: Lateral Izquierdo">
+    </div>
+    <div class="group row">
+      <div>
+        <label>Ancho (mm)</label>
+        <input type="number" id="piece-w" value="600">
+      </div>
+      <div>
+        <label>Alto (mm)</label>
+        <input type="number" id="piece-h" value="400">
+      </div>
+    </div>
+    <button onclick="addPiece()">+ Agregar Pieza</button>
+    <button class="clear" onclick="clearPieces()">Limpiar Piezas</button>
+  </div>
 
-        function agregarPieza() {
-            const container = document.getElementById('piezas-container');
-            const row = document.createElement('div');
-            row.className = 'input-row pieza-item';
-            row.innerHTML = `
-                <div class="pieza-id-badge">Pieza #X</div>
-                <div class="input-group">
-                    <label>Ancho:</label>
-                    <input type="number" class="pz-w" placeholder="Ej. 20" min="1">
-                </div>
-                <div class="input-group">
-                    <label>Alto:</label>
-                    <input type="number" class="pz-h" placeholder="Ej. 20" min="1">
-                </div>
-                <div class="input-group">
-                    <label>¿Cuántas?:</label>
-                    <input type="number" class="pz-qty" value="1" min="1">
-                </div>
-                <button class="btn-delete" onclick="eliminarPieza(this)">Eliminar</button>
-            `;
-            container.appendChild(row);
-            actualizarNumeros();
-        }
+  <!-- Área Visual -->
+  <div class="main-area">
+    <div class="instructions">
+      💡 <strong>Controles:</strong> Arrastra las piezas sobre el tablero para acomodarlas. Haz <strong>clic</strong> sobre una pieza para rotarla 90°. El borde rojo discontinuo indica el margen del disco de sierra.
+    </div>
+    <div id="board-container">
+      <div id="board"></div>
+    </div>
+  </div>
+</div>
 
-        function eliminarPieza(btn) {
-            if (document.querySelectorAll('.pieza-item').length > 1) {
-                btn.parentElement.remove();
-                actualizarNumeros();
-            } else {
-                alert("Debes tener al menos un tipo de pieza para cortar.");
-            }
-        }
+<script>
+  let scale = 1; // Factor de escala para ajustar al visor
+  let activePiece = null;
+  let offsetX = 0, offsetY = 0;
 
-        // --- ALGORITMO BIN PACKING (Guillotina Simple) ---
-        class GuillotinePacker {
-            constructor(width, height) {
-                this.freeRects = [{x: 0, y: 0, w: width, h: height}];
-            }
+  function updateBoard() {
+    const board = document.getElementById('board');
+    const container = document.getElementById('board-container');
+    
+    const bw = parseFloat(document.getElementById('board-w').value) || 1000;
+    const bh = parseFloat(document.getElementById('board-h').value) || 1000;
 
-            insert(width, height) {
-                let bestScore = Infinity;
-                let bestRectIndex = -1;
-                let bestNode = null;
+    // Calcular escala para ajustar al contenedor de pantalla
+    const maxW = container.clientWidth - 40;
+    const maxH = container.clientHeight - 40;
+    scale = Math.min(maxW / bw, maxH / bh);
 
-                for (let i = 0; i < this.freeRects.length; i++) {
-                    let fr = this.freeRects[i];
-                    // Intento Normal
-                    if (width <= fr.w && height <= fr.h) {
-                        let score = Math.min(fr.w - width, fr.h - height);
-                        if (score < bestScore) { bestNode = {x: fr.x, y: fr.y, w: width, h: height}; bestScore = score; bestRectIndex = i; }
-                    }
-                    // Intento Rotado (90 grados)
-                    if (height <= fr.w && width <= fr.h) {
-                        let score = Math.min(fr.w - height, fr.h - width);
-                        if (score < bestScore) { bestNode = {x: fr.x, y: fr.y, w: height, h: width}; bestScore = score; bestRectIndex = i; }
-                    }
-                }
+    board.style.width = (bw * scale) + 'px';
+    board.style.height = (bh * scale) + 'px';
 
-                if (bestNode) {
-                    let fr = this.freeRects[bestRectIndex];
-                    this.freeRects.splice(bestRectIndex, 1); // Quitar el espacio libre usado
-                    this.split(fr, bestNode); // Partir el espacio sobrante
-                    return bestNode;
-                }
-                return null; // No cabe
-            }
+    // Ajustar posiciones de piezas si cambia la escala
+    document.querySelectorAll('.piece').forEach(p => {
+      p.style.outline = `${(parseFloat(document.getElementById('kerf').value) || 0) * scale}px dashed rgba(239, 68, 68, 0.6)`;
+    });
+  }
 
-            split(freeRect, usedRect) {
-                // Dividir el espacio restante maximizando el área más grande
-                let rightRect = {x: freeRect.x + usedRect.w, y: freeRect.y, w: freeRect.w - usedRect.w, h: usedRect.h};
-                let bottomRect = {x: freeRect.x, y: freeRect.y + usedRect.h, w: freeRect.w, h: freeRect.h - usedRect.h};
-                
-                if (freeRect.w - usedRect.w > freeRect.h - usedRect.h) { 
-                    rightRect.h = freeRect.h; bottomRect.w = usedRect.w; // Corte vertical
-                } else { 
-                    bottomRect.w = freeRect.w; rightRect.h = usedRect.h; // Corte horizontal
-                }
+  function addPiece() {
+    const name = document.getElementById('piece-name').value || 'Pieza';
+    const pw = parseFloat(document.getElementById('piece-w').value);
+    const ph = parseFloat(document.getElementById('piece-h').value);
+    const kerf = parseFloat(document.getElementById('kerf').value) || 0;
 
-                if (rightRect.w > 0 && rightRect.h > 0) this.freeRects.push(rightRect);
-                if (bottomRect.w > 0 && bottomRect.h > 0) this.freeRects.push(bottomRect);
-            }
-        }
+    if (!pw || !ph) return alert('Por favor ingresa dimensiones válidas.');
 
-        // --- LÓGICA PRINCIPAL ---
-        function calcularAcomodo() {
-            const placaW = parseFloat(document.getElementById('placaW').value);
-            const placaH = parseFloat(document.getElementById('placaH').value);
-            if (!placaW || !placaH) return alert("Define el tamaño de la placa principal.");
+    const board = document.getElementById('board');
+    const piece = document.createElement('div');
+    piece.className = 'piece';
+    
+    // Guardar dimensiones reales en atributos
+    piece.dataset.w = pw;
+    piece.dataset.h = ph;
+    piece.dataset.name = name;
 
-            const filasDOM = document.querySelectorAll('.pieza-item');
-            let itemsParaEmpacar = [];
-            let reporteDatos = [];
+    // Margen de sierra visualizado con outline
+    piece.style.outline = `${kerf * scale}px dashed rgba(239, 68, 68, 0.6)`;
+    piece.style.outlineOffset = '0px';
 
-            // 1. Leer todas las piezas solicitadas
-            filasDOM.forEach((fila, index) => {
-                const id = index + 1;
-                const w = parseFloat(fila.querySelector('.pz-w').value);
-                const h = parseFloat(fila.querySelector('.pz-h').value);
-                const qty = parseInt(fila.querySelector('.pz-qty').value);
-                const color = colores[index % colores.length];
+    updatePieceSize(piece);
 
-                if (!w || !h || !qty) return;
+    // Posición inicial
+    piece.style.left = '10px';
+    piece.style.top = '10px';
 
-                // Guardar para el reporte
-                reporteDatos.push({ id, w, h, pedidas: qty, caben: 0, color });
+    // Eventos de Arrastre
+    piece.addEventListener('mousedown', startDrag);
+    // Rotar al hacer clic simple
+    piece.addEventListener('click', (e) => {
+      if (piece.dataset.dragged === 'true') return; // Evitar rotar al terminar de arrastrar
+      const currentW = parseFloat(piece.dataset.w);
+      const currentH = parseFloat(piece.dataset.h);
+      piece.dataset.w = currentH;
+      piece.dataset.h = currentW;
+      updatePieceSize(piece);
+    });
 
-                // Crear items individuales para el algoritmo
-                for (let i = 0; i < qty; i++) {
-                    itemsParaEmpacar.push({ id, w, h, area: w * h, color, reportIndex: reporteDatos.length - 1 });
-                }
-            });
+    board.appendChild(piece);
+  }
 
-            if (itemsParaEmpacar.length === 0) return alert("Agrega medidas a las piezas.");
+  function updatePieceSize(piece) {
+    const w = parseFloat(piece.dataset.w);
+    const h = parseFloat(piece.dataset.h);
+    piece.style.width = (w * scale) + 'px';
+    piece.style.height = (h * scale) + 'px';
+    piece.innerHTML = `<span><strong>${piece.dataset.name}</strong></span><span>${w} x ${h} mm</span>`;
+  }
 
-            // 2. Ordenar por Área (de mayor a menor) para que el algoritmo funcione mejor
-            itemsParaEmpacar.sort((a, b) => b.area - a.area);
+  function startDrag(e) {
+    activePiece = e.currentTarget;
+    activePiece.dataset.dragged = 'false';
+    const rect = activePiece.getBoundingClientRect();
+    
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
 
-            // 3. Empacar
-            const packer = new GuillotinePacker(placaW, placaH);
-            let piezasColocadas = [];
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', stopDrag);
+  }
 
-            itemsParaEmpacar.forEach(item => {
-                const node = packer.insert(item.w, item.h);
-                if (node) {
-                    piezasColocadas.push({ ...item, x: node.x, y: node.y, drawW: node.w, drawH: node.h });
-                    reporteDatos[item.reportIndex].caben += 1;
-                }
-            });
+  function drag(e) {
+    if (!activePiece) return;
+    activePiece.dataset.dragged = 'true';
+    
+    const boardRect = document.getElementById('board').getBoundingClientRect();
+    let x = (e.clientX - boardRect.left - offsetX) / scale;
+    let y = (e.clientY - boardRect.top - offsetY) / scale;
 
-            // 4. Dibujar en el Canvas
-            dibujarPlaca(placaW, placaH, piezasColocadas);
+    // Limites del tablero
+    const bw = parseFloat(document.getElementById('board-w').value);
+    const bh = parseFloat(document.getElementById('board-h').value);
+    const pw = parseFloat(activePiece.dataset.w);
+    const ph = parseFloat(activePiece.dataset.h);
 
-            // 5. Mostrar Reporte de lo que cupo y lo que faltó
-            generarReporte(reporteDatos);
-        }
+    x = Math.max(0, Math.min(x, bw - pw));
+    y = Math.max(0, Math.min(y, bh - ph));
 
-        function dibujarPlaca(boardW, boardH, colocadas) {
-            document.getElementById('visualization-area').style.display = 'block';
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            const maxPx = 700; // Máximo ancho visual en pantalla
-            const scale = Math.min(maxPx / boardW, 500 / boardH);
-            
-            canvas.width = boardW * scale;
-            canvas.height = boardH * scale;
+    activePiece.style.left = (x * scale) + 'px';
+    activePiece.style.top = (y * scale) + 'px';
+  }
 
-            // Fondo (La placa principal)
-            ctx.fillStyle = '#ecf0f1';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+  function stopDrag() {
+    activePiece = null;
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('mouseup', stopDrag);
+  }
 
-            // Dibujar cada pieza acomodada
-            colocadas.forEach(p => {
-                const x = p.x * scale;
-                const y = p.y * scale;
-                const w = p.drawW * scale;
-                const h = p.drawH * scale;
+  function clearPieces() {
+    document.getElementById('board').innerHTML = '';
+  }
 
-                // Rectángulo
-                ctx.fillStyle = p.color;
-                ctx.fillRect(x, y, w, h);
-                ctx.strokeStyle = '#2c3e50';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(x, y, w, h);
+  // Inicializar al cargar
+  window.onload = updateBoard;
+  window.onresize = updateBoard;
+</script>
 
-                // Número (ID de la pieza) en el centro
-                ctx.fillStyle = 'white';
-                // Hacer la letra más pequeña si la pieza es muy delgada
-                const fontSize = Math.min(18, Math.min(w, h) * 0.6); 
-                ctx.font = `bold ${fontSize}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                // Efecto de sombra para que el número se lea sobre cualquier color
-                ctx.shadowColor = "rgba(0,0,0,0.8)";
-                ctx.shadowBlur = 4;
-                ctx.fillText(`#${p.id}`, x + w/2, y + h/2);
-                ctx.shadowBlur = 0; // reset
-            });
-        }
-
-        function generarReporte(datos) {
-            const reportDiv = document.getElementById('reporte');
-            reportDiv.innerHTML = '';
-
-            datos.forEach(d => {
-                const faltan = d.pedidas - d.caben;
-                const statusHtml = faltan === 0 
-                    ? `<span class="badge-ok">¡Cupieron todas!</span>` 
-                    : `<span class="badge-fail">Faltó espacio</span>`;
-
-                reportDiv.innerHTML += `
-                    <div class="report-card" style="border-left-color: ${d.color}">
-                        <h3>Pieza #${d.id} (${d.w} x ${d.h}) ${statusHtml}</h3>
-                        <p><strong>Pedidas:</strong> ${d.pedidas}</p>
-                        <p><strong>Caben en placa:</strong> <span style="color:#27ae60; font-size:16px; font-weight:bold;">${d.caben}</span></p>
-                        <p><strong>Se quedaron fuera:</strong> <span style="color:#e74c3c;">${faltan}</span></p>
-                    </div>
-                `;
-            });
-        }
-
-        // Inicializar números visuales al cargar
-        actualizarNumeros();
-    </script>
 </body>
 </html>
