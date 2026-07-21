@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Optimizador de Cortes de Madera</title>
+  <title>Optimizador de Cortes de Madera Pro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; padding: 20px; color: #1e293b; }
     .container { display: flex; gap: 20px; max-width: 1400px; margin: 0 auto; }
     
-    /* Panel lateral de controles */
+    /* Panel lateral */
     .sidebar { width: 320px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); flex-shrink: 0; }
     h2 { font-size: 16px; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
     .group { margin-bottom: 12px; }
@@ -22,28 +22,35 @@
     button.clear { background: #ef4444; margin-top: 8px; }
     button.clear:hover { background: #dc2626; }
     
-    /* Panel de Resumen de Área */
+    /* Panel Resumen Lateral */
     .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-top: 15px; }
     .summary-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #334155; }
-    .summary-item strong { color: #0f172a; }
-
-    /* Área del Tablero */
+    
+    /* Área Principal */
     .main-area { flex-grow: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .instructions { font-size: 13px; color: #64748b; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 4px solid #2563eb; }
     
-    #board-container { width: 100%; height: 650px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; overflow: hidden; position: relative; }
+    #board-container { width: 100%; height: 650px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; overflow: hidden; position: relative; }
+    
+    /* Indicador Visual de Medidas en el Canvas */
+    .canvas-overlay { position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.85); color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 10; pointer-events: none; }
+    .canvas-overlay strong { color: #38bdf8; }
+
     #board { background: #e2e8f0; border: 2px solid #94a3b8; position: relative; transform-origin: center; }
     
+    /* Caja delimitadora del área utilizada */
+    #bounding-box-guide { position: absolute; border: 2px dashed #f59e0b; background: rgba(245, 158, 11, 0.08); pointer-events: none; display: none; }
+
     /* Piezas arrastrables */
-    .piece { position: absolute; background: #3b82f6; color: white; border: 1px solid #1d4ed8; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; text-align: center; cursor: move; user-select: none; border-radius: 3px; font-weight: 500; }
-    .piece:hover { filter: brightness(1.1); }
+    .piece { position: absolute; color: white; border: 1px solid rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; text-align: center; cursor: move; user-select: none; border-radius: 3px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5); box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+    .piece:hover { filter: brightness(1.08); }
     .piece span { pointer-events: none; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Panel de Configuración -->
+  <!-- Panel Lateral -->
   <div class="sidebar">
     <h2>1. Tablero Principal</h2>
     <div class="group row">
@@ -84,35 +91,36 @@
     <button onclick="addPieces()">+ Agregar Piezas</button>
     <button class="clear" onclick="clearPieces()">Limpiar Piezas</button>
 
-    <h2>3. Resumen de Consumo</h2>
+    <h2>3. Resumen</h2>
     <div class="summary-card">
       <div class="summary-item">
-        <span>Piezas en tablero:</span>
+        <span>Piezas totales:</span>
         <strong id="stat-count">0</strong>
       </div>
       <div class="summary-item">
-        <span>Área de piezas:</span>
+        <span>Área neta piezas:</span>
         <strong id="stat-area-pieces">0.00 m²</strong>
       </div>
       <div class="summary-item">
         <span>Aprovechamiento:</span>
         <strong id="stat-usage">0%</strong>
       </div>
-      <hr style="margin: 8px 0; border: 0; border-top: 1px solid #cbd5e1;">
-      <div class="summary-item" style="flex-direction: column; gap: 4px;">
-        <span>Placa mínima necesaria:</span>
-        <strong id="stat-bounding-box" style="color: #2563eb; font-size: 14px;">0 x 0 mm</strong>
-      </div>
     </div>
   </div>
 
-  <!-- Área Visual -->
+  <!-- Área de Trabajo -->
   <div class="main-area">
     <div class="instructions">
-      💡 <strong>Controles:</strong> Arrastra las piezas sobre el tablero. Haz <strong>clic</strong> sobre una pieza para rotarla 90°. Revisa el panel izquierdo para ver el área ocupada y la medida de placa que requieres.
+      💡 <strong>Novedad:</strong> Las piezas cambian de color por paquete y <strong>no se pueden encimar</strong> respetando el margen de corte. Revisa las medidas del área usada arriba a la izquierda.
     </div>
     <div id="board-container">
-      <div id="board"></div>
+      <div class="canvas-overlay">
+        📏 Tablero Base: <strong id="overlay-board-dim">0 x 0 mm</strong> | 
+        ✂️ Placa Utilizada: <strong id="overlay-used-dim">0 x 0 mm</strong>
+      </div>
+      <div id="board">
+        <div id="bounding-box-guide"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -121,6 +129,19 @@
   let scale = 1;
   let activePiece = null;
   let offsetX = 0, offsetY = 0;
+
+  // Paleta de colores atractivos para los lotes de piezas
+  const batchColors = [
+    '#2563eb', '#d97706', '#059669', '#7c3aed', '#dc2626', 
+    '#0891b2', '#4d7c0f', '#c026d3', '#ea580c', '#4f46e5'
+  ];
+  let colorIndex = 0;
+
+  function getRandomColor() {
+    const color = batchColors[colorIndex % batchColors.length];
+    colorIndex++;
+    return color;
+  }
 
   function updateBoard() {
     const board = document.getElementById('board');
@@ -135,6 +156,8 @@
 
     board.style.width = (bw * scale) + 'px';
     board.style.height = (bh * scale) + 'px';
+
+    document.getElementById('overlay-board-dim').innerText = `${bw} x ${bh} mm`;
 
     const kerf = parseFloat(document.getElementById('kerf').value) || 0;
     document.querySelectorAll('.piece').forEach(p => {
@@ -154,6 +177,7 @@
     if (!pw || !ph || qty < 1) return alert('Por favor ingresa valores válidos.');
 
     const board = document.getElementById('board');
+    const batchColor = getRandomColor(); // Color único para este paquete
 
     for (let i = 0; i < qty; i++) {
       const piece = document.createElement('div');
@@ -163,27 +187,46 @@
 
       piece.dataset.w = pw;
       piece.dataset.h = ph;
-      piece.dataset.x = 10 + ((i * 15) % 150);
-      piece.dataset.y = 10 + ((i * 15) % 150);
       piece.dataset.name = displayName;
+      piece.style.backgroundColor = batchColor;
 
       piece.style.outline = `${kerf * scale}px dashed rgba(239, 68, 68, 0.6)`;
       piece.style.outlineOffset = '0px';
 
       updatePieceSize(piece);
 
-      piece.style.left = (parseFloat(piece.dataset.x) * scale) + 'px';
-      piece.style.top = (parseFloat(piece.dataset.y) * scale) + 'px';
+      // Buscar posición libre automáticamente
+      const initialPos = findFreePosition(piece, pw, ph, kerf);
+      piece.dataset.x = initialPos.x;
+      piece.dataset.y = initialPos.y;
+
+      piece.style.left = (initialPos.x * scale) + 'px';
+      piece.style.top = (initialPos.y * scale) + 'px';
 
       piece.addEventListener('mousedown', startDrag);
       piece.addEventListener('click', (e) => {
         if (piece.dataset.dragged === 'true') return;
+        
+        // Intentar rotar
         const currentW = parseFloat(piece.dataset.w);
         const currentH = parseFloat(piece.dataset.h);
+        
         piece.dataset.w = currentH;
         piece.dataset.h = currentW;
-        updatePieceSize(piece);
-        calculateStats();
+
+        const currentX = parseFloat(piece.dataset.x);
+        const currentY = parseFloat(piece.dataset.y);
+
+        // Validar si al rotar no choca con otra pieza o se sale
+        if (hasCollision(piece, currentX, currentY, currentH, currentW, kerf)) {
+          // Si choca, deshacer rotación
+          piece.dataset.w = currentW;
+          piece.dataset.h = currentH;
+          alert('No hay espacio suficiente para rotar esta pieza sin encimarse.');
+        } else {
+          updatePieceSize(piece);
+          calculateStats();
+        }
       });
 
       board.appendChild(piece);
@@ -217,24 +260,83 @@
     activePiece.dataset.dragged = 'true';
     
     const boardRect = document.getElementById('board').getBoundingClientRect();
-    let x = (e.clientX - boardRect.left - offsetX) / scale;
-    let y = (e.clientY - boardRect.top - offsetY) / scale;
+    let targetX = (e.clientX - boardRect.left - offsetX) / scale;
+    let targetY = (e.clientY - boardRect.top - offsetY) / scale;
 
     const bw = parseFloat(document.getElementById('board-w').value);
     const bh = parseFloat(document.getElementById('board-h').value);
     const pw = parseFloat(activePiece.dataset.w);
     const ph = parseFloat(activePiece.dataset.h);
+    const kerf = parseFloat(document.getElementById('kerf').value) || 0;
 
-    x = Math.max(0, Math.min(x, bw - pw));
-    y = Math.max(0, Math.min(y, bh - ph));
+    // Límites de tablero
+    targetX = Math.max(0, Math.min(targetX, bw - pw));
+    targetY = Math.max(0, Math.min(targetY, bh - ph));
 
-    activePiece.dataset.x = x;
-    activePiece.dataset.y = y;
+    // RESTRICCIÓN DE SUPERPOSICIÓN: Probar movimiento en X y Y por separado para deslizamiento fluido
+    let finalX = parseFloat(activePiece.dataset.x);
+    let finalY = parseFloat(activePiece.dataset.y);
 
-    activePiece.style.left = (x * scale) + 'px';
-    activePiece.style.top = (y * scale) + 'px';
+    if (!hasCollision(activePiece, targetX, finalY, pw, ph, kerf)) {
+      finalX = targetX;
+    }
+    if (!hasCollision(activePiece, finalX, targetY, pw, ph, kerf)) {
+      finalY = targetY;
+    }
+
+    activePiece.dataset.x = finalX;
+    activePiece.dataset.y = finalY;
+
+    activePiece.style.left = (finalX * scale) + 'px';
+    activePiece.style.top = (finalY * scale) + 'px';
 
     calculateStats();
+  }
+
+  // Comprobar colisión entre piezas incluyendo el margen del disco (kerf)
+  function hasCollision(currentPiece, x, y, w, h, kerf) {
+    const pieces = document.querySelectorAll('.piece');
+    const bw = parseFloat(document.getElementById('board-w').value);
+    const bh = parseFloat(document.getElementById('board-h').value);
+
+    // Validar salida de tablero
+    if (x < 0 || y < 0 || x + w > bw || y + h > bh) return true;
+
+    for (let p of pieces) {
+      if (p === currentPiece) continue;
+
+      const px = parseFloat(p.dataset.x);
+      const py = parseFloat(p.dataset.y);
+      const pw = parseFloat(p.dataset.w);
+      const ph = parseFloat(p.dataset.h);
+
+      // Evaluación AABB considerando la zona de kerf alrededor
+      const overlap = !(
+        x + w + kerf <= px ||
+        x >= px + pw + kerf ||
+        y + h + kerf <= py ||
+        y >= py + ph + kerf
+      );
+
+      if (overlap) return true;
+    }
+    return false;
+  }
+
+  // Buscar una coordenada inicial vacía al agregar piezas
+  function findFreePosition(piece, w, h, kerf) {
+    const bw = parseFloat(document.getElementById('board-w').value);
+    const bh = parseFloat(document.getElementById('board-h').value);
+    const step = 20;
+
+    for (let y = 10; y <= bh - h; y += step) {
+      for (let x = 10; x <= bw - w; x += step) {
+        if (!hasCollision(piece, x, y, w, h, kerf)) {
+          return { x, y };
+        }
+      }
+    }
+    return { x: 10, y: 10 }; // Respaldo
   }
 
   function stopDrag() {
@@ -244,7 +346,7 @@
   }
 
   function clearPieces() {
-    document.getElementById('board').innerHTML = '';
+    document.getElementById('board').innerHTML = '<div id="bounding-box-guide"></div>';
     calculateStats();
   }
 
@@ -252,7 +354,7 @@
     const pieces = document.querySelectorAll('.piece');
     const bw = parseFloat(document.getElementById('board-w').value) || 0;
     const bh = parseFloat(document.getElementById('board-h').value) || 0;
-    const totalBoardArea = (bw * bh) / 1000000; // En m2
+    const totalBoardArea = (bw * bh) / 1000000;
 
     let totalPieceArea = 0;
     let maxX = 0;
@@ -264,7 +366,7 @@
       const x = parseFloat(p.dataset.x) || 0;
       const y = parseFloat(p.dataset.y) || 0;
 
-      totalPieceArea += (w * h) / 1000000; // En m2
+      totalPieceArea += (w * h) / 1000000;
 
       if (x + w > maxX) maxX = x + w;
       if (y + h > maxY) maxY = y + h;
@@ -272,10 +374,25 @@
 
     const usagePct = totalBoardArea > 0 ? ((totalPieceArea / totalBoardArea) * 100).toFixed(1) : 0;
 
+    // Actualizar Panel
     document.getElementById('stat-count').innerText = pieces.length;
     document.getElementById('stat-area-pieces').innerText = totalPieceArea.toFixed(2) + ' m²';
     document.getElementById('stat-usage').innerText = usagePct + '%';
-    document.getElementById('stat-bounding-box').innerText = `${Math.round(maxX)} x ${Math.round(maxY)} mm`;
+
+    // Actualizar Encabezado del Área de Trabajo
+    const boundW = Math.round(maxX);
+    const boundH = Math.round(maxY);
+    document.getElementById('overlay-used-dim').innerText = `${boundW} x ${boundH} mm`;
+
+    // Guía Rectangular en pantalla
+    const guide = document.getElementById('bounding-box-guide');
+    if (pieces.length > 0 && maxX > 0 && maxY > 0) {
+      guide.style.display = 'block';
+      guide.style.width = (maxX * scale) + 'px';
+      guide.style.height = (maxY * scale) + 'px';
+    } else {
+      guide.style.display = 'none';
+    }
   }
 
   window.onload = updateBoard;
